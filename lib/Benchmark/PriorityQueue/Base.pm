@@ -19,9 +19,7 @@ sub random_insert {
 	my ($self, $n) = @_;
 	my $l = $self->new_queue();
 	return timeit(10, sub {
-		for my $i (1 .. $n) {
-			$self->insert($l, $i, rand());
-		}
+		$self->insert_n_random($l, $n);
 	});
 }
 
@@ -29,17 +27,89 @@ sub ordered_insert {
 	my ($self, $n) = @_;
 	my $l = $self->new_queue();
 		return timeit(10, sub {
-		for my $i (1 .. $n) {
-			$self->insert($l, $i, $i);
-		}
+		$self->insert_n_ordered($l, $n);
+	});
+}
+
+sub insert_n_random {
+	my ($self, $l, $n) = @_;
+	for my $i (1 .. $n) {
+		$self->insert($l, $i, rand());
+	}
+}
+
+sub insert_n_ordered {
+	my ($self, $l, $n) = @_;
+	for my $i (1 .. $n) {
+		$self->insert($l, $i, $i);
+	}
+}
+
+sub pop_lowest_n {
+	my ($self, $l, $n) = @_;
+	for my $i (1 .. $n) {
+		$self->pop_lowest($l);
+	}
+}
+
+sub pop_highest_n {
+	my ($self, $l, $n) = @_;
+	for my $i (1 .. $n) {
+		$self->pop_highest($l);
+	}
+}
+
+sub pop_highest_ordered {
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
+	$self->insert_n_ordered($l, $n);
+	return timeit(10, sub {
+		$self->pop_highest_n($l, $n);
+	});
+}
+
+sub pop_lowest_ordered {
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
+	$self->insert_n_ordered($l, $n);
+	return timeit(10, sub {
+		$self->pop_lowest_n($l, $n);
+	});
+}
+
+sub pop_highest_random {
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
+	$self->insert_n_random($l, $n);
+	return timeit(10, sub {
+		$self->pop_highest_n($l, $n);
+	});
+}
+
+sub pop_lowest_random {
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
+	$self->insert_n_random($l, $n);
+	return timeit(10, sub {
+		$self->pop_lowest_n($l, $n);
 	});
 }
 
 sub supported {
-	return (
+	my ($self) = @_;
+	my %supported = (
 		'random_insert' => \&random_insert,
 		'ordered_insert' => \&ordered_insert,
 	);
+	if ($self->can("pop_highest")) {
+		$supported{pop_highest_ordered} = \&pop_highest_ordered;
+		$supported{pop_highest_random} = \&pop_highest_random;
+	}
+	if ($self->can("pop_lowest")) {
+		$supported{pop_lowest_ordered} = \&pop_lowest_ordered;
+		$supported{pop_lowest_random} = \&pop_lowest_random;
+	}
+	return %supported;
 }
 
 sub new_queue {

@@ -14,6 +14,13 @@ sub insert {
 	$_[1] = $_[1]->insert($_[3], $_[2]);
 }
 
+sub pop_lowest {
+	# my ($self, $l) = @_;
+	my ($pq_, $priority, $item) = $_[1]->shift_min;
+	$_[1] = $pq_;
+	return $item;
+}
+
 sub module_tested {
 	return "Data::PrioQ::SkewBinomial";
 }

@@ -14,6 +14,18 @@ sub insert {
 	$l->add($object, $priority);
 }
 
+sub pop_highest {
+	my ($self, $l) = @_;
+	$l->highest_first();
+	return $l->pop();
+}
+
+sub pop_lowest {
+	my ($self, $l) = @_;
+	$l->lowest_first();
+	return $l->pop();
+}
+
 sub module_tested {
 	return 'Heap::Priority';
 }

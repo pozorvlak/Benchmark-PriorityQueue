@@ -14,6 +14,16 @@ sub insert {
 	$l->insert($priority, $obj);
 }
 
+sub pop_highest {
+	my ($self, $l) = @_;
+	return $l->pop();
+}
+
+sub pop_lowest {
+	my ($self, $l) = @_;
+	return $l->shift();
+}
+
 sub module_tested {
 	return 'List::Priority';
 }
