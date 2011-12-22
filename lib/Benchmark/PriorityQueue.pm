@@ -3,6 +3,7 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
+use Benchmark qw/:all/;
 
 require Exporter;
 
@@ -24,7 +25,7 @@ sub run_benchmark {
 }
 
 sub print_benchmark {
-	say join(" ", run_benchmark(@_));
+	say join(", ", map { $_->[1] + $_->[2] } run_benchmark(@_));
 	return 1;
 }
 
@@ -33,7 +34,7 @@ sub run_all_benchmarks {
 	my %bplp = Benchmark::PriorityQueue::List::Priority::supported();
 	my $benchmarks_run = 0;
 	for my $bmark (keys %bplp) {
-		say "$bmark: ";
+		print "$bmark, ";
 		$benchmarks_run += print_benchmark($n, $bplp{$bmark});
 	}
 	return $benchmarks_run;
