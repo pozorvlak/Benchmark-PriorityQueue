@@ -5,6 +5,14 @@ use warnings;
 use List::Priority;
 use Benchmark qw/:all/;
 
+sub new {
+        my $this = shift;
+        my $class = ref($this) || $this;
+        my $self = {};
+        bless $self, $class;
+	return $self;
+}
+
 sub random_insert {
 	my $n = shift;
 	my $l = List::Priority->new();
@@ -30,6 +38,10 @@ sub supported {
 		'random_insert' => \&random_insert,
 		'ordered_insert' => \&ordered_insert,
 	);
+}
+
+sub module_tested {
+	return 'List::Priority';
 }
 
 1;

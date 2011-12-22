@@ -8,12 +8,14 @@ use Benchmark qw/:all/;
 require Exporter;
 
 our @ISA = qw(Exporter);
-
 our @EXPORT_OK = qw(run_all_benchmarks);
-
 our $VERSION = '0.01';
 
 use Benchmark::PriorityQueue::List::Priority;
+
+our @test_modules = (
+	Benchmark::PriorityQueue::List::Priority->new(),
+);
 
 sub run_benchmark {
 	my ($max_n, $f) = @_;
@@ -31,11 +33,15 @@ sub print_benchmark {
 
 sub run_all_benchmarks {
 	my $n = shift // 6;
-	my %bplp = Benchmark::PriorityQueue::List::Priority::supported();
 	my $benchmarks_run = 0;
-	for my $bmark (keys %bplp) {
-		print "$bmark, ";
-		$benchmarks_run += print_benchmark($n, $bplp{$bmark});
+	foreach my $module (@test_modules) {
+		say $module->module_tested();
+		my %bmarks = $module->supported();
+		for my $bmark (keys %bmarks) {
+			print "$bmark, ";
+			$benchmarks_run += print_benchmark($n, $bmarks{$bmark});
+		}
+		say "";
 	}
 	return $benchmarks_run;
 }
