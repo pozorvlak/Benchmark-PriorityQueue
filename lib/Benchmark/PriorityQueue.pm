@@ -14,11 +14,13 @@ our $VERSION = '0.01';
 use Benchmark::PriorityQueue::List::Priority;
 use Benchmark::PriorityQueue::List::PriorityQueue;
 use Benchmark::PriorityQueue::Heap::Priority;
+use Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
 
 our @test_modules = (
 	Benchmark::PriorityQueue::List::Priority->new(),
 	Benchmark::PriorityQueue::List::PriorityQueue->new(),
 	# Benchmark::PriorityQueue::Heap::Priority->new(),
+	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new()
 );
 
 sub run_benchmark {
