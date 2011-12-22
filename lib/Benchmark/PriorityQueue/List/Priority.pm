@@ -3,6 +3,28 @@ package Benchmark::PriorityQueue::List::Priority;
 use strict;
 use warnings;
 use List::Priority;
+use Benchmark qw/:all/;
+
+sub random_insert {
+	my $n = shift;
+	my $l = List::Priority::new();
+	return timeit(10, sub {
+		for my $i (1 .. $n) {
+			$l->insert(rand(), $i);
+		}
+	});
+}
+
+sub ordered_insert {
+	my $n = shift;
+	my $l = List::Priority::new();
+	return timeit(10, sub {
+		for my $i (1 .. $n) {
+			$l->insert($i, $i);
+		}
+	});
+}
+
 
 1;
 __END__

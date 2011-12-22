@@ -9,7 +9,7 @@ use AutoLoader qw(AUTOLOAD);
 
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+our @EXPORT_OK = ();
 
 our $VERSION = '0.01';
 
