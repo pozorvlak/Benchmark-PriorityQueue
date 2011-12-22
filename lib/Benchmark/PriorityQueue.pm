@@ -9,71 +9,56 @@ use AutoLoader qw(AUTOLOAD);
 
 our @ISA = qw(Exporter);
 
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Benchmark::PriorityQueue ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	
-) ] );
-
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-	
-);
 
 our $VERSION = '0.01';
 
-
-# Preloaded methods go here.
-
-# Autoload methods go after =cut, and are processed by the autosplit program.
-
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
-Benchmark::PriorityQueue - Perl extension for blah blah blah
+Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
 =head1 SYNOPSIS
 
-  use Benchmark::PriorityQueue;
-  blah blah blah
+  use Benchmark::PriorityQueue qw/run_benchmarks run_all_benchmarks/;
+
+  # Run only the benchmarks you care about
+  run_benchmarks('random_insert', 'ordered_insert');
+
+  # Benchmark ALL THE FEATURES
+  run_all_benchmarks();
 
 =head1 DESCRIPTION
 
-Stub documentation for Benchmark::PriorityQueue, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+As of December 2011, there were approximately thirty kajillion priority queue
+modules(*) on CPAN. They are not all equally well-written; moreover, there are
+several possible ways of implementing priority queues, and they have different
+performance characteristics. This module is intended to help you choose the
+right one for I<your> application.
 
-Blah blah blah.
+(*) OK, seven.
 
 =head2 EXPORT
 
 None by default.
 
-
-
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
+L<Heap::Priority>, L<List::Priority>, L<List::PriorityQueue>,
+L<Hash::PriorityQueue>, L<POE::Queue>, L<Timeout::Queue>,
+L<Data::PrioQ::SkewBinomial>.
 
-If you have a mailing list set up for your module, mention it here.
+=head1 CONTRIBUTING
 
-If you have a web site set up for your module, mention it here.
+The version control for this repository may be found at
+L<http://github.com/pozorvlak/Benchmark-PriorityQueue>. The best way to
+contribute to this module is with the standard GitHub pull request system.
 
 =head1 AUTHOR
 
-Miles Gould, E<lt>miles@E<gt>
+Miles Gould, E<lt>miles@assyrian.org.ukE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

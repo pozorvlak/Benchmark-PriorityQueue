@@ -1,16 +1,13 @@
 Benchmark-PriorityQueue version 0.01
 ====================================
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+As of December 2011, there were approximately thirty kajillion priority queue
+modules(*) on CPAN. They are not all equally well-written; moreover, there are
+several possible ways of implementing priority queues, and they have different
+performance characteristics. This module is intended to help you choose the
+right one for *your* application.
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+(*) OK, seven.
 
 INSTALLATION
 
@@ -25,11 +22,10 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  blah blah blah
+Heap::Priority, List::Priority, List::PriorityQueue, Hash::PriorityQueue,
+POE::Queue, Timeout::Queue, Data::PrioQ::SkewBinomial.
 
 COPYRIGHT AND LICENCE
-
-Put the correct copyright and licence information here.
 
 Copyright (C) 2011 by Miles Gould
 
