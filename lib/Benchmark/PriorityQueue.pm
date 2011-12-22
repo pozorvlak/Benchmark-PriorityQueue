@@ -5,13 +5,39 @@ use strict;
 use warnings;
 
 require Exporter;
-use AutoLoader qw(AUTOLOAD);
 
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = ();
+our @EXPORT_OK = qw(run_all_benchmarks);
 
 our $VERSION = '0.01';
+
+use Benchmark::PriorityQueue::List::Priority;
+
+sub run_benchmark {
+	my ($max_n, $f) = @_;
+	my @results;
+	for my $n (1 .. $max_n) {
+		push @results, $f->(10**$n);
+	}
+	return @results;
+}
+
+sub print_benchmark {
+	say join(" ", run_benchmark(@_));
+	return 1;
+}
+
+sub run_all_benchmarks {
+	my $n = shift // 6;
+	my %bplp = Benchmark::PriorityQueue::List::Priority::supported();
+	my $benchmarks_run = 0;
+	for my $bmark (keys %bplp) {
+		say "$bmark: ";
+		$benchmarks_run += print_benchmark($n, $bplp{$bmark});
+	}
+	return $benchmarks_run;
+}
 
 1;
 __END__

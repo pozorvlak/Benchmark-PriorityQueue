@@ -7,7 +7,7 @@ use Benchmark qw/:all/;
 
 sub random_insert {
 	my $n = shift;
-	my $l = List::Priority::new();
+	my $l = List::Priority->new();
 	return timeit(10, sub {
 		for my $i (1 .. $n) {
 			$l->insert(rand(), $i);
@@ -17,7 +17,7 @@ sub random_insert {
 
 sub ordered_insert {
 	my $n = shift;
-	my $l = List::Priority::new();
+	my $l = List::Priority->new();
 	return timeit(10, sub {
 		for my $i (1 .. $n) {
 			$l->insert($i, $i);
@@ -25,6 +25,12 @@ sub ordered_insert {
 	});
 }
 
+sub supported {
+	return (
+		'random_insert' => \&random_insert,
+		'ordered_insert' => \&ordered_insert,
+	);
+}
 
 1;
 __END__
