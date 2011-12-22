@@ -4,3 +4,5 @@ MANIFEST
 README
 t/Benchmark-PriorityQueue.t
 lib/Benchmark/PriorityQueue.pm
+lib/Benchmark/PriorityQueue/List/Priority.pm
+bin/bmark_pq
