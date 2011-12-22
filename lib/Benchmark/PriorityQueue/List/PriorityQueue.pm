@@ -3,41 +3,15 @@ package Benchmark::PriorityQueue::List::PriorityQueue;
 use strict;
 use warnings;
 use List::PriorityQueue;
-use Benchmark qw/:all/;
+use parent 'Benchmark::PriorityQueue::Base';
 
-sub new {
-        my $this = shift;
-        my $class = ref($this) || $this;
-        my $self = {};
-        bless $self, $class;
-	return $self;
+sub new_queue {
+	return List::PriorityQueue->new();
 }
 
-sub random_insert {
-	my $n = shift;
-	my $l = List::PriorityQueue->new();
-	return timeit(10, sub {
-		for my $i (1 .. $n) {
-			$l->insert($i, rand());
-		}
-	});
-}
-
-sub ordered_insert {
-	my $n = shift;
-	my $l = List::PriorityQueue->new();
-	return timeit(10, sub {
-		for my $i (1 .. $n) {
-			$l->insert($i, $i);
-		}
-	});
-}
-
-sub supported {
-	return (
-		'random_insert' => \&random_insert,
-		'ordered_insert' => \&ordered_insert,
-	);
+sub insert {
+	my ($self, $l, $obj, $priority) = @_;
+	$l->insert($obj, $priority);
 }
 
 sub module_tested {

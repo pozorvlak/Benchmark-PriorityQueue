@@ -22,10 +22,12 @@ our @test_modules = (
 );
 
 sub run_benchmark {
-	my ($max_n, $f) = @_;
+	my ($tester, $bmark, $max_n) = @_;
+	my %bmarks = $tester->supported();
+	my $f = $bmarks{$bmark};
 	my @results;
 	for my $n (1 .. $max_n) {
-		push @results, $f->(10**$n);
+		push @results, $f->($tester, 10**$n);
 	}
 	return @results;
 }
@@ -37,17 +39,17 @@ sub print_benchmark {
 
 sub run_all_benchmarks {
 	my $n = shift // 6;
-	my $benchmarks_run = 0;
-	foreach my $module (@test_modules) {
-		say $module->module_tested();
-		my %bmarks = $module->supported();
+	my $bmarks_run = 0;
+	foreach my $tester (@test_modules) {
+		say $tester->module_tested();
+		my %bmarks = $tester->supported();
 		for my $bmark (keys %bmarks) {
 			print "$bmark, ";
-			$benchmarks_run += print_benchmark($n, $bmarks{$bmark});
+			$bmarks_run += print_benchmark($tester, $bmark, $n);
 		}
 		say "";
 	}
-	return $benchmarks_run;
+	return $bmarks_run;
 }
 
 1;
