@@ -52,7 +52,7 @@ L<Data::PrioQ::SkewBinomial>.
 
 =head1 CONTRIBUTING
 
-The version control for this repository may be found at
+The version control repository for this distribution may be found at
 L<http://github.com/pozorvlak/Benchmark-PriorityQueue>. The best way to
 contribute to this module is with the standard GitHub pull request system.
 
