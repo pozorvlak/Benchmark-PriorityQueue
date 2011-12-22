@@ -1,0 +1,30 @@
+package Benchmark::PriorityQueue::List::Priority;
+
+use strict;
+use warnings;
+use List::Priority;
+
+1;
+__END__
+
+=head1 NAME
+
+Benchmark::PriorityQueue::List::Priority - benchmark List::Priority.
+
+=head1 SEE ALSO
+
+L<Benchmark::PriorityQueue>, L<List::Priority>.
+
+=head1 AUTHOR
+
+Miles Gould, E<lt>miles@assyrian.org.ukE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 by Miles Gould
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.12.4 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
