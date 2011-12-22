@@ -12,11 +12,13 @@ our @EXPORT_OK = qw(run_all_benchmarks);
 our $VERSION = '0.01';
 
 use Benchmark::PriorityQueue::List::Priority;
+use Benchmark::PriorityQueue::List::PriorityQueue;
 use Benchmark::PriorityQueue::Heap::Priority;
 
 our @test_modules = (
 	Benchmark::PriorityQueue::List::Priority->new(),
-	Benchmark::PriorityQueue::Heap::Priority->new(),
+	Benchmark::PriorityQueue::List::PriorityQueue->new(),
+	# Benchmark::PriorityQueue::Heap::Priority->new(),
 );
 
 sub run_benchmark {
