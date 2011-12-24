@@ -6,4 +6,4 @@ use 5.10.0;
 use Benchmark::PriorityQueue 'run_all_benchmarks';
 
 my $n = shift // 3;
-run_all_benchmarks($n);
+run_all_benchmarks($n, @ARGV);

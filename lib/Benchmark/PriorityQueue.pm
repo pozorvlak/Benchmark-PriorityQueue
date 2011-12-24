@@ -17,23 +17,31 @@ use Benchmark::PriorityQueue::List::PriorityQueue;
 use Benchmark::PriorityQueue::Heap::Priority;
 use Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
 
-our @test_modules = (
+our @testers = (
 	Benchmark::PriorityQueue::List::Priority->new(),
 	Benchmark::PriorityQueue::List::PriorityQueue->new(),
-	# Benchmark::PriorityQueue::Heap::Priority->new(),
+	Benchmark::PriorityQueue::Heap::Priority->new(),
 	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new()
 );
 
-our %tested_modules = map { $_->module_tested() => $_ } @test_modules;
+# Hash of [module name] => tester mappings
+our %testers = map { $_->module_tested() => $_ } @testers;
+# Names of all supported benchmarks
 our $benchmarks = Set::Scalar->new;
-$benchmarks->insert($_->supported) for @test_modules;
+$benchmarks->insert($_->supported) for @testers;
 
 sub run_all_benchmarks {
 	my $n = shift // 6;
+	my @modules_to_test = @_;
+	if (@modules_to_test == 0) {
+		# If no modules specified, test them all.
+		@modules_to_test = keys %testers;
+	}
 	my $bmarks_run = 0;
 	foreach my $bmark ($benchmarks->members) {
 		say $bmark;
-		for my $tester (@test_modules) {
+		for my $module (@modules_to_test) {
+			my $tester = $testers{$module};
 			next unless $tester->supports($bmark);
 			print $tester->module_tested(), ", ";
 			$bmarks_run += $tester->print_benchmark($bmark, $n);
