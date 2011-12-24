@@ -4,6 +4,7 @@ use 5.010000;
 use strict;
 use warnings;
 use Benchmark qw/:all/;
+use Set::Scalar;
 
 require Exporter;
 
@@ -23,31 +24,19 @@ our @test_modules = (
 	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new()
 );
 
-sub run_benchmark {
-	my ($tester, $bmark, $max_n) = @_;
-	my %bmarks = $tester->supported();
-	my $f = $bmarks{$bmark};
-	my @results;
-	for my $n (1 .. $max_n) {
-		push @results, $f->($tester, 10**$n);
-	}
-	return @results;
-}
-
-sub print_benchmark {
-	say join(", ", map { $_->[1] + $_->[2] } run_benchmark(@_));
-	return 1;
-}
+our %tested_modules = map { $_->module_tested() => $_ } @test_modules;
+our $benchmarks = Set::Scalar->new;
+$benchmarks->insert($_->supported) for @test_modules;
 
 sub run_all_benchmarks {
 	my $n = shift // 6;
 	my $bmarks_run = 0;
-	foreach my $tester (@test_modules) {
-		say $tester->module_tested();
-		my %bmarks = $tester->supported();
-		for my $bmark (keys %bmarks) {
-			print "$bmark, ";
-			$bmarks_run += print_benchmark($tester, $bmark, $n);
+	foreach my $bmark ($benchmarks->members) {
+		say $bmark;
+		for my $tester (@test_modules) {
+			next unless $tester->supports($bmark);
+			print $tester->module_tested(), ", ";
+			$bmarks_run += $tester->print_benchmark($bmark, $n);
 		}
 		say "";
 	}

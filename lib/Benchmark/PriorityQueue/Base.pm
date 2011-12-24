@@ -95,7 +95,7 @@ sub pop_lowest_random {
 	});
 }
 
-sub supported {
+sub benchmark_code {
 	my ($self) = @_;
 	my %supported = (
 		'random_insert' => \&random_insert,
@@ -110,6 +110,36 @@ sub supported {
 		$supported{pop_lowest_random} = \&pop_lowest_random;
 	}
 	return %supported;
+}
+
+sub supported {
+	my ($self) = @_;
+	my %bmarks = $self->benchmark_code;
+	return keys %bmarks;
+}
+
+sub supports {
+	my ($self, $bmark) = @_;
+	my %bmarks = $self->benchmark_code;
+	return exists $bmarks{$bmark};
+}
+
+sub run_benchmark {
+	my ($self, $bmark, $max_n) = @_;
+	my %bmarks = $self->benchmark_code();
+	my $f = $bmarks{$bmark};
+	my @results;
+	for my $n (1 .. $max_n) {
+		push @results, $f->($self, 10**$n);
+	}
+	return @results;
+}
+
+sub print_benchmark {
+	my ($self, $bmark, $n) = @_;
+	my @times = map { $_->[1] + $_->[2] } $self->run_benchmark($bmark, $n);
+	say join(", ", @times);
+	return 1;
 }
 
 sub new_queue {

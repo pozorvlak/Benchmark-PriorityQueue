@@ -7,6 +7,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Benchmark/PriorityQueue.pm', # finds $VERSION
     PREREQ_PM         => {
 	'Test::More' => 0.88,
+	'Set::Scalar' => 0.01,
 	'Heap::Priority' => 0.01,
 	'List::Priority' => 0.03,
 	'List::PriorityQueue' => 0.01,
