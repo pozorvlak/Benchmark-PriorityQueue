@@ -136,9 +136,16 @@ sub run_benchmark {
 }
 
 sub print_benchmark {
-	my ($self, $bmark, $n) = @_;
-	my @times = map { $_->[1] + $_->[2] } $self->run_benchmark($bmark, $n);
-	say join(", ", @times);
+	local $| = 1;
+	my ($self, $bmark, $max_n) = @_;
+	my %bmarks = $self->benchmark_code();
+	my $f = $bmarks{$bmark};
+	for my $n (1 .. $max_n) {
+		my @time = @{$f->($self, 10**$n)};
+		print $time[1] + $time[2];
+		print ", " unless $n == $max_n;
+	}
+	print "\n";
 	return 1;
 }
 
