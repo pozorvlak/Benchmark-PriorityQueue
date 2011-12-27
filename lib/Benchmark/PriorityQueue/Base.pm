@@ -64,7 +64,7 @@ sub insert_n_ordered {
 sub insert_n_random_mod3 {
 	my ($self, $l, $n) = @_;
 	for my $i (1 .. $n) {
-		$self->insert($l, $i, rand() % 3);
+		$self->insert($l, $i, int(rand(3)));
 	}
 }
 
