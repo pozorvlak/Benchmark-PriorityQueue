@@ -7,7 +7,10 @@ t/02-run-all.t
 lib/Benchmark/PriorityQueue/Base.pm
 lib/Benchmark/PriorityQueue/Data/PrioQ/SkewBinomial.pm
 lib/Benchmark/PriorityQueue/Heap/Priority.pm
+lib/Benchmark/PriorityQueue/Hash/PriorityQueue.pm
 lib/Benchmark/PriorityQueue/List/Priority.pm
 lib/Benchmark/PriorityQueue/List/PriorityQueue.pm
+lib/Benchmark/PriorityQueue/POE/Queue/Array.pm
+lib/Benchmark/PriorityQueue/POE/XS/Queue/Array.pm
 lib/Benchmark/PriorityQueue.pm
 bin/bmark_pq

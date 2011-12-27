@@ -17,13 +17,16 @@ use Benchmark::PriorityQueue::List::PriorityQueue;
 use Benchmark::PriorityQueue::Hash::PriorityQueue;
 use Benchmark::PriorityQueue::Heap::Priority;
 use Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
+use Benchmark::PriorityQueue::POE::Queue::Array;
+use Benchmark::PriorityQueue::POE::XS::Queue::Array;
 
 our @testers = (
 	Benchmark::PriorityQueue::List::Priority->new(),
 	Benchmark::PriorityQueue::List::PriorityQueue->new(),
 	Benchmark::PriorityQueue::Hash::PriorityQueue->new(),
 	Benchmark::PriorityQueue::Heap::Priority->new(),
-	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new()
+	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new(),
+	Benchmark::PriorityQueue::POE::XS::Queue::Array->new(),
 );
 
 # Hash of [module name] => tester mappings
