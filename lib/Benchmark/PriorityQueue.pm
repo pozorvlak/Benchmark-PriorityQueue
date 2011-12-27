@@ -47,6 +47,7 @@ sub run_all_benchmarks {
 		say $bmark;
 		for my $module (@modules_to_test) {
 			my $tester = $testers{$module};
+			die "No tester for $module" unless defined $tester;
 			next unless $tester->supports($bmark);
 			print $tester->module_tested(), ", ";
 			$bmarks_run += $tester->print_benchmark($bmark, $n);
