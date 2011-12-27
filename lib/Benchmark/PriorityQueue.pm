@@ -26,6 +26,7 @@ our @testers = (
 	Benchmark::PriorityQueue::Hash::PriorityQueue->new(),
 	Benchmark::PriorityQueue::Heap::Priority->new(),
 	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new(),
+	Benchmark::PriorityQueue::POE::Queue::Array->new(),
 	Benchmark::PriorityQueue::POE::XS::Queue::Array->new(),
 );
 
