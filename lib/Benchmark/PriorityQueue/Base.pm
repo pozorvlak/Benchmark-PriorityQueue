@@ -94,7 +94,7 @@ sub pop_highest_ordered {
 	my $l = $self->new_queue();
 	$self->insert_n_ordered($l, $n);
 	return timeit(10, sub {
-		$self->pop_highest_n($l, $n);
+		$self->pop_highest_n($l, 1);
 	});
 }
 
@@ -103,7 +103,7 @@ sub pop_highest_ordered_mod3 {
 	my $l = $self->new_queue();
 	$self->insert_n_ordered_mod3($l, $n);
 	return timeit(10, sub {
-		$self->pop_highest_n($l, $n);
+		$self->pop_highest_n($l, 1);
 	});
 }
 sub pop_lowest_ordered {
@@ -111,7 +111,7 @@ sub pop_lowest_ordered {
 	my $l = $self->new_queue();
 	$self->insert_n_ordered($l, $n);
 	return timeit(10, sub {
-		$self->pop_lowest_n($l, $n);
+		$self->pop_lowest_n($l, 1);
 	});
 }
 
@@ -120,7 +120,7 @@ sub pop_highest_random {
 	my $l = $self->new_queue();
 	$self->insert_n_random($l, $n);
 	return timeit(10, sub {
-		$self->pop_highest_n($l, $n);
+		$self->pop_highest_n($l, 1);
 	});
 }
 
@@ -129,7 +129,7 @@ sub pop_highest_random_mod3 {
 	my $l = $self->new_queue();
 	$self->insert_n_random_mod3($l, $n);
 	return timeit(10, sub {
-		$self->pop_highest_n($l, $n);
+		$self->pop_highest_n($l, 1);
 	});
 }
 
@@ -138,7 +138,7 @@ sub pop_lowest_random {
 	my $l = $self->new_queue();
 	$self->insert_n_random($l, $n);
 	return timeit(10, sub {
-		$self->pop_lowest_n($l, $n);
+		$self->pop_lowest_n($l, 1);
 	});
 }
 
