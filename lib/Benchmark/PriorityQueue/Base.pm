@@ -6,6 +6,7 @@ use 5.10.0;
 
 use Carp;
 use Benchmark qw/:all/;
+use DateTime;
 
 sub new {
         my $this = shift;
@@ -176,13 +177,19 @@ sub supports {
 	return exists $bmarks{$bmark};
 }
 
+sub timeout {
+	return DateTime::Duration->new(seconds => 5);
+}
+
 sub run_benchmark {
 	my ($self, $bmark, $max_n) = @_;
 	my %bmarks = $self->benchmark_code();
 	my $f = $bmarks{$bmark};
 	my @results;
+	my $timeout = DateTime->now() + $self->timeout;
 	for my $n (1 .. $max_n) {
 		push @results, $f->($self, 10**$n);
+		last if DateTime->now() > $timeout;
 	}
 	return @results;
 }
@@ -192,9 +199,11 @@ sub print_benchmark {
 	my ($self, $bmark, $max_n) = @_;
 	my %bmarks = $self->benchmark_code();
 	my $f = $bmarks{$bmark};
+	my $timeout = DateTime->now() + $self->timeout;
 	for my $n (1 .. $max_n) {
 		my @time = @{$f->($self, 10**$n)};
 		print $time[1] + $time[2];
+		last if DateTime->now() > $timeout;
 		print ", " unless $n == $max_n;
 	}
 	print "\n";
