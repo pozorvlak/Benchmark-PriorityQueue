@@ -1,9 +1,10 @@
 package Benchmark::PriorityQueue::POE::XS::Queue::Array;
+use Moose;
 
-use strict;
-use warnings;
+extends 'Benchmark::PriorityQueue::Base';
+with 'Benchmark::PriorityQueue::PopsHighest';
+
 use POE::XS::Queue::Array;
-use parent 'Benchmark::PriorityQueue::Base';
 
 sub new_queue {
 	return POE::XS::Queue::Array->new();

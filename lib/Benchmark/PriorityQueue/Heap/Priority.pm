@@ -2,6 +2,7 @@ package Benchmark::PriorityQueue::Heap::Priority;
 use Moose;
 
 extends 'Benchmark::PriorityQueue::Base';
+with 'Benchmark::PriorityQueue::PopsHighest';
 with 'Benchmark::PriorityQueue::PopsLowest';
 
 use Heap::Priority;

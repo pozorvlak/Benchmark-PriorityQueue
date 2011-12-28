@@ -128,13 +128,6 @@ sub benchmark_code {
 		'random_insert_mod3' => \&random_insert_mod3,
 		'ordered_insert_mod3' => \&ordered_insert_mod3,
 	);
-	if ($self->can("pop_highest")) {
-		$supported{pop_highest_ordered} = \&pop_highest_ordered;
-		$supported{pop_highest_random} = \&pop_highest_random;
-		$supported{pop_highest_ordered_mod3}
-			= \&pop_highest_ordered_mod3;
-		$supported{pop_highest_random_mod3} = \&pop_highest_random_mod3;
-	}
 	return %supported;
 }
 
