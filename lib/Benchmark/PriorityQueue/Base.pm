@@ -181,7 +181,7 @@ sub supports {
 sub timed_out {
 	my ($self, $start_time) = @_;
 	my $timeout = $self->timeout;
-	if (defined $timeout) {
+	if ($timeout->seconds > 0) {
 		return $start_time + $timeout < DateTime->now();
 	}
 	return 0;
