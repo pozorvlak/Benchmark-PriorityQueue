@@ -3,7 +3,20 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue 'run_all_benchmarks';
+use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark';
+use Getopt::Long;
 
-my $n = shift // 3;
-run_all_benchmarks($n, @ARGV);
+my @modules; my @benchmarks; my $help;
+my $n = 3;
+GetOptions ("m=s" => \@modules,
+	    "b=s" => \@benchmarks,
+	    "n=i" => \$n,
+	    "h"   => \$help);
+
+if (@benchmarks == 0) {
+	run_all_benchmarks($n, @modules);
+} else {
+	for my $bmark (@benchmarks) {
+		run_benchmark($bmark, $n, @modules);
+	}
+}

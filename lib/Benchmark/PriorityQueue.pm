@@ -9,7 +9,7 @@ use Set::Scalar;
 require Exporter;
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(run_all_benchmarks);
+our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
 our $VERSION = '0.01';
 
 use Benchmark::PriorityQueue::List::Priority;
@@ -36,24 +36,31 @@ our %testers = map { $_->module_tested() => $_ } @testers;
 our $benchmarks = Set::Scalar->new;
 $benchmarks->insert($_->supported) for @testers;
 
-sub run_all_benchmarks {
-	my $n = shift // 6;
-	my @modules_to_test = @_;
+sub run_benchmark {
+	my ($bmark, $n, @modules_to_test) = @_;
+	my $result;
 	if (@modules_to_test == 0) {
 		# If no modules specified, test them all.
 		@modules_to_test = keys %testers;
 	}
+	say $bmark;
+	for my $module (@modules_to_test) {
+		my $tester = $testers{$module};
+		die "No tester for $module" unless defined $tester;
+		next unless $tester->supports($bmark);
+		print $tester->module_tested(), ", ";
+		$result = $tester->print_benchmark($bmark, $n);
+	}
+	say "";
+	return $result;
+}
+
+sub run_all_benchmarks {
+	my $n = shift // 6;
+	my @modules_to_test = @_;
 	my $bmarks_run = 0;
 	foreach my $bmark ($benchmarks->members) {
-		say $bmark;
-		for my $module (@modules_to_test) {
-			my $tester = $testers{$module};
-			die "No tester for $module" unless defined $tester;
-			next unless $tester->supports($bmark);
-			print $tester->module_tested(), ", ";
-			$bmarks_run += $tester->print_benchmark($bmark, $n);
-		}
-		say "";
+		$bmarks_run += run_benchmark($bmark, $n, @modules_to_test);
 	}
 	return $bmarks_run;
 }
@@ -67,10 +74,10 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
 =head1 SYNOPSIS
 
-  use Benchmark::PriorityQueue qw/run_benchmarks run_all_benchmarks/;
+  use Benchmark::PriorityQueue qw/run_benchmark run_all_benchmarks/;
 
-  # Run only the benchmarks you care about
-  run_benchmarks('random_insert', 'ordered_insert');
+  # Run only the benchmark you care about
+  run_benchmark('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
 
   # Benchmark ALL THE FEATURES
   run_all_benchmarks();
