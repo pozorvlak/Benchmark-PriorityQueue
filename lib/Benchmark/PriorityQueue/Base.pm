@@ -201,12 +201,4 @@ sub print_benchmark {
 	return 1;
 }
 
-sub new_queue {
-	croak "new_queue should return a new priority queue";
-}
-
-sub module_tested {
-	croak "module_tested should return the name of the module under test.";
-}
-
 1;
