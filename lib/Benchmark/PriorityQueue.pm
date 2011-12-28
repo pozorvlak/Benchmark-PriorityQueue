@@ -45,7 +45,7 @@ sub all_benchmarks {
 }
 
 sub run_benchmark {
-	my ($bmark, $n, @modules_to_test) = @_;
+	my ($bmark, $n, $timeout, @modules_to_test) = @_;
 	my $result;
 	if (@modules_to_test == 0) {
 		# If no modules specified, test them all.
@@ -54,6 +54,7 @@ sub run_benchmark {
 	say $bmark;
 	for my $module (@modules_to_test) {
 		my $tester = $testers{$module};
+		$tester->timeout($timeout);
 		die "No tester for $module" unless defined $tester;
 		next unless $tester->supports($bmark);
 		print $tester->module_tested(), ", ";
@@ -64,11 +65,10 @@ sub run_benchmark {
 }
 
 sub run_all_benchmarks {
-	my $n = shift // 6;
-	my @modules_to_test = @_;
+	my ($n, $timeout, @modules) = @_;
 	my $bmarks_run = 0;
 	foreach my $bmark (all_benchmarks()) {
-		$bmarks_run += run_benchmark($bmark, $n, @modules_to_test);
+		$bmarks_run += run_benchmark($bmark, $n, $timeout, @modules);
 	}
 	return $bmarks_run;
 }

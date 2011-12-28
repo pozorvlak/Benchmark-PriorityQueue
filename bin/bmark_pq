@@ -5,31 +5,37 @@ use warnings;
 use 5.10.0;
 use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark';
 use Getopt::Long;
+use DateTime::Duration;
 
 my $default_n = 3;
-my @modules; my @benchmarks; my $help;
+my @modules; my @benchmarks; my $help; my $timeout;
 my $n = $default_n;
 GetOptions ("m=s" => \@modules,
 	    "b=s" => \@benchmarks,
 	    "n=i" => \$n,
+	    "t=i" => \$timeout,
 	    "h"   => \$help);
 
 if ($help) {
 	usage();
 }
 
+if (defined $timeout) {
+	$timeout = DateTime::Duration->new(seconds => $timeout);
+}
+
 if (@benchmarks == 0) {
-	run_all_benchmarks($n, @modules);
+	run_all_benchmarks($n, $timeout, @modules);
 } else {
 	for my $bmark (@benchmarks) {
-		run_benchmark($bmark, $n, @modules);
+		run_benchmark($bmark, $n, $timeout, @modules);
 	}
 }
 
 sub usage {
 	say <<END;
 Usage:
-    $0 -m [module 1] -m [module 2] -b [benchmark 1] -n [exp] ...
+    $0  -n [exp] -t [timeout] -m [module 1] -m [module 2] -b [benchmark 1] ...
 
 Options: 
     -m  Module to benchmark, eg List::Priority. If no -m options are given, all
@@ -39,6 +45,10 @@ Options:
 
     -n  Maximum exponent to use. For example, if -n 3 is used, data-structures
         of at most 1000 elements (= 10^3) are used for benchmarking.
+	Defaults to $default_n.
+
+    -t  Timeout in seconds. If this time is exceeded for a given
+	benchmark/module pair, we give up and move on to the next one.
 
     -h  Show this help message and exit.
 END

@@ -178,7 +178,20 @@ sub supports {
 }
 
 sub timeout {
-	return DateTime::Duration->new(seconds => 5);
+	my ($self, $timeout) = @_;
+	if ($#_ > 0) {
+		$self->{timeout} = $timeout;
+	}
+	return $self->{timeout};
+}
+
+sub timed_out {
+	my ($self, $start_time) = @_;
+	my $timeout = $self->timeout;
+	if (defined $timeout) {
+		return $start_time + $timeout < DateTime->now();
+	}
+	return 0;
 }
 
 sub run_benchmark {
@@ -186,10 +199,10 @@ sub run_benchmark {
 	my %bmarks = $self->benchmark_code();
 	my $f = $bmarks{$bmark};
 	my @results;
-	my $timeout = DateTime->now() + $self->timeout;
+	my $start_time = DateTime->now();
 	for my $n (1 .. $max_n) {
 		push @results, $f->($self, 10**$n);
-		last if DateTime->now() > $timeout;
+		last if $self->timed_out($start_time);
 	}
 	return @results;
 }
@@ -199,11 +212,11 @@ sub print_benchmark {
 	my ($self, $bmark, $max_n) = @_;
 	my %bmarks = $self->benchmark_code();
 	my $f = $bmarks{$bmark};
-	my $timeout = DateTime->now() + $self->timeout;
+	my $start_time = DateTime->now();
 	for my $n (1 .. $max_n) {
 		my @time = @{$f->($self, 10**$n)};
 		print $time[1] + $time[2];
-		last if DateTime->now() > $timeout;
+		last if $self->timed_out($start_time);
 		print ", " unless $n == $max_n;
 	}
 	print "\n";
