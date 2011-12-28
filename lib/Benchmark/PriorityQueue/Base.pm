@@ -77,13 +77,6 @@ sub insert_n_ordered_mod3 {
 	}
 }
 
-sub pop_lowest_n {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
-		$self->pop_lowest($l);
-	}
-}
-
 sub pop_highest_n {
 	my ($self, $l, $n) = @_;
 	for my $i (1 .. $n) {
@@ -108,14 +101,6 @@ sub pop_highest_ordered_mod3 {
 		$self->pop_highest_n($l, 1);
 	});
 }
-sub pop_lowest_ordered {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered($l, $n);
-	return timeit(10, sub {
-		$self->pop_lowest_n($l, 1);
-	});
-}
 
 sub pop_highest_random {
 	my ($self, $n) = @_;
@@ -135,15 +120,6 @@ sub pop_highest_random_mod3 {
 	});
 }
 
-sub pop_lowest_random {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random($l, $n);
-	return timeit(10, sub {
-		$self->pop_lowest_n($l, 1);
-	});
-}
-
 sub benchmark_code {
 	my ($self) = @_;
 	my %supported = (
@@ -158,10 +134,6 @@ sub benchmark_code {
 		$supported{pop_highest_ordered_mod3}
 			= \&pop_highest_ordered_mod3;
 		$supported{pop_highest_random_mod3} = \&pop_highest_random_mod3;
-	}
-	if ($self->can("pop_lowest")) {
-		$supported{pop_lowest_ordered} = \&pop_lowest_ordered;
-		$supported{pop_lowest_random} = \&pop_lowest_random;
 	}
 	return %supported;
 }

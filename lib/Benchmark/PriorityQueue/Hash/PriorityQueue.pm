@@ -1,9 +1,10 @@
 package Benchmark::PriorityQueue::Hash::PriorityQueue;
+use Moose;
 
-use strict;
-use warnings;
+extends 'Benchmark::PriorityQueue::Base';
+with 'Benchmark::PriorityQueue::PopsLowest';
+
 use Hash::PriorityQueue;
-use parent 'Benchmark::PriorityQueue::Base';
 
 sub new_queue {
 	return Hash::PriorityQueue->new();

@@ -1,8 +1,9 @@
 package Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
+use Moose;
 
-use strict;
-use warnings;
-use parent 'Benchmark::PriorityQueue::Base';
+extends 'Benchmark::PriorityQueue::Base';
+with 'Benchmark::PriorityQueue::PopsLowest';
+
 use Data::PrioQ::SkewBinomial;
 
 sub new_queue {
