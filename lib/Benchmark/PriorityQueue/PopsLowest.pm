@@ -17,7 +17,7 @@ sub pop_lowest_random {
 	my $l = $self->new_queue();
 	$self->insert_n_random($l, $n);
 	return timeit(10, sub {
-		$self->pop_lowest_n($l, 1);
+		$self->pop_lowest($l);
 	});
 }
 
@@ -26,15 +26,8 @@ sub pop_lowest_ordered {
 	my $l = $self->new_queue();
 	$self->insert_n_ordered($l, $n);
 	return timeit(10, sub {
-		$self->pop_lowest_n($l, 1);
-	});
-}
-
-sub pop_lowest_n {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
 		$self->pop_lowest($l);
-	}
+	});
 }
 
 1;
