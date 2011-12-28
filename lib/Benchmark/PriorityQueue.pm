@@ -33,15 +33,23 @@ our @testers = (
 # Hash of [module name] => tester mappings
 our %testers = map { $_->module_tested() => $_ } @testers;
 # Names of all supported benchmarks
-our $benchmarks = Set::Scalar->new;
-$benchmarks->insert($_->supported) for @testers;
+
+sub all_tested_modules {
+	return keys %testers;
+}
+
+sub all_benchmarks {
+	my $benchmarks = Set::Scalar->new;
+	$benchmarks->insert($_->supported) for @testers;
+	return $benchmarks->members;
+}
 
 sub run_benchmark {
 	my ($bmark, $n, @modules_to_test) = @_;
 	my $result;
 	if (@modules_to_test == 0) {
 		# If no modules specified, test them all.
-		@modules_to_test = keys %testers;
+		@modules_to_test = all_tested_modules;
 	}
 	say $bmark;
 	for my $module (@modules_to_test) {
@@ -59,7 +67,7 @@ sub run_all_benchmarks {
 	my $n = shift // 6;
 	my @modules_to_test = @_;
 	my $bmarks_run = 0;
-	foreach my $bmark ($benchmarks->members) {
+	foreach my $bmark (all_benchmarks()) {
 		$bmarks_run += run_benchmark($bmark, $n, @modules_to_test);
 	}
 	return $bmarks_run;

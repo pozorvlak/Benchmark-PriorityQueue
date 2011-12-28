@@ -4,6 +4,8 @@ MANIFEST
 README
 t/01-use.t
 t/02-run-all.t
+t/03-exist_testers.t
+t/04-all_benchmarks.t
 lib/Benchmark/PriorityQueue/Base.pm
 lib/Benchmark/PriorityQueue/Data/PrioQ/SkewBinomial.pm
 lib/Benchmark/PriorityQueue/Heap/Priority.pm

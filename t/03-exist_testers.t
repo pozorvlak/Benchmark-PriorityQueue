@@ -16,4 +16,8 @@ for my $m (@modules) {
 		"There's a test object for $m");
 }
 
+is_deeply([sort(@modules)],
+	[sort(Benchmark::PriorityQueue::all_tested_modules())],
+	"all_tested_modules returns expected result");
+
 done_testing;
