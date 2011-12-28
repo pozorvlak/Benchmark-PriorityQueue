@@ -35,13 +35,13 @@ our %testers = map { $_->module_tested() => $_ } @testers;
 # Names of all supported benchmarks
 
 sub all_tested_modules {
-	return keys %testers;
+	return sort(keys %testers);
 }
 
 sub all_benchmarks {
 	my $benchmarks = Set::Scalar->new;
 	$benchmarks->insert($_->supported) for @testers;
-	return $benchmarks->members;
+	return sort($benchmarks->members);
 }
 
 sub run_benchmark {

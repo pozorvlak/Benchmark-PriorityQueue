@@ -6,12 +6,17 @@ use 5.10.0;
 use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark';
 use Getopt::Long;
 
+my $default_n = 3;
 my @modules; my @benchmarks; my $help;
-my $n = 3;
+my $n = $default_n;
 GetOptions ("m=s" => \@modules,
 	    "b=s" => \@benchmarks,
 	    "n=i" => \$n,
 	    "h"   => \$help);
+
+if ($help) {
+	usage();
+}
 
 if (@benchmarks == 0) {
 	run_all_benchmarks($n, @modules);
@@ -19,4 +24,37 @@ if (@benchmarks == 0) {
 	for my $bmark (@benchmarks) {
 		run_benchmark($bmark, $n, @modules);
 	}
+}
+
+sub usage {
+	say <<END;
+Usage:
+    $0 -m [module 1] -m [module 2] -b [benchmark 1] -n [exp] ...
+
+Options: 
+    -m  Module to benchmark, eg List::Priority. If no -m options are given, all
+        priority queue modules are benchmarked.
+
+    -b  Benchmark to run. If no -b options are given, all benchmarks are run.
+
+    -n  Maximum exponent to use. For example, if -n 3 is used, data-structures
+        of at most 1000 elements (= 10^3) are used for benchmarking.
+
+    -h  Show this help message and exit.
+END
+	print_benchmarks();
+	say "";
+	print_modules();
+	say "";
+	exit 0;
+}
+
+sub print_benchmarks {
+	say "Available benchmarks:";
+	print(map { "   $_\n" } Benchmark::PriorityQueue::all_benchmarks());
+}
+
+sub print_modules {
+	say "Available modules to benchmark:";
+	print(map { "   $_\n" } Benchmark::PriorityQueue::all_tested_modules());
 }
