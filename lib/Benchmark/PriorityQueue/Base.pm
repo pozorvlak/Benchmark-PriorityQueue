@@ -1,12 +1,13 @@
 package Benchmark::PriorityQueue::Base;
+use Moose;
 
-use strict;
-use warnings;
 use 5.10.0;
 
 use Carp;
 use Benchmark qw/:all/;
 use DateTime;
+
+has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
 
 sub new {
         my $this = shift;
@@ -175,14 +176,6 @@ sub supports {
 	my ($self, $bmark) = @_;
 	my %bmarks = $self->benchmark_code;
 	return exists $bmarks{$bmark};
-}
-
-sub timeout {
-	my ($self, $timeout) = @_;
-	if ($#_ > 0) {
-		$self->{timeout} = $timeout;
-	}
-	return $self->{timeout};
 }
 
 sub timed_out {
