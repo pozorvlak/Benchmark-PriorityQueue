@@ -4,49 +4,48 @@ use Moose;
 use 5.10.0;
 
 use Carp;
-use Benchmark qw/:all/;
+use Benchmark qw/timeit countit/;
 use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
+has 'iterations' => (is => 'rw', isa => 'Int', default => 10);
 
-sub new {
-        my $this = shift;
-        my $class = ref($this) || $this;
-        my $self = {};
-        bless $self, $class;
-	return $self;
+sub time_method {
+	my ($self, $method, @args) = @_;
+	my $l = $self->new_queue;
+	# Optional trailing coderef to set up the list for this test;
+	# receives $l as its sole argument
+	if (@args && ref $args[-1] eq 'CODE') {
+		my $setup = pop @args;
+		$setup->($l);
+	}
+	my $code_to_time = sub { $self->$method($l, @args) };
+	if ($self->iterations < 0) {
+		return countit(-$self->iterations, $code_to_time);
+	}
+	else {
+		return timeit(  $self->iterations, $code_to_time);
+	}
 }
 
 sub random_insert {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random($l, $n);
-	});
+	return $self->time_method(insert_n_random => $n);
 }
 
 sub ordered_insert {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered($l, $n);
-	});
+	return $self->time_method(insert_n_ordered => $n);
 }
 
 sub random_insert_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random_mod3($l, $n);
-	});
+	return $self->time_method(insert_n_random_mod3 => $n);
 }
 
 sub ordered_insert_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered_mod3($l, $n);
-	});
+	return $self->time_method(insert_n_ordered_mod3 => $n);
 }
 
 sub insert_n_random {
@@ -79,37 +78,29 @@ sub insert_n_ordered_mod3 {
 
 sub pop_highest_ordered {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered(@_, $n);
 	});
 }
 
 sub pop_highest_ordered_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered_mod3(@_, $n);
 	});
 }
 
 sub pop_highest_random {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random(@_, $n);
 	});
 }
 
 sub pop_highest_random_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random_mod3(@_, $n);
 	});
 }
 
@@ -161,17 +152,21 @@ sub run_benchmark {
 sub print_benchmark {
 	local $| = 1;
 	my ($self, $bmark, $max_n) = @_;
-	my %bmarks = $self->benchmark_code();
-	my $f = $bmarks{$bmark};
 	my $start_time = DateTime->now();
 	for my $n (1 .. $max_n) {
-		my @time = @{$f->($self, 10**$n)};
+		my @time = @{ $self->time_benchmark($bmark, 10**$n) };
 		print $time[1] + $time[2];
 		last if $self->timed_out($start_time);
 		print ", " unless $n == $max_n;
 	}
 	print "\n";
 	return 1;
+}
+
+sub time_benchmark {
+	my ($self, $bmark, $n) = @_;
+	my %bmarks = $self->benchmark_code();
+	return $bmarks{$bmark}->($self, $n);
 }
 
 1;
