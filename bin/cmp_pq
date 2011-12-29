@@ -14,7 +14,8 @@ Usage: cmp_pq [OPTION]...
 Options:
 
   -i ITERATIONS
-    Number of iterations to time; default 10
+    Number of iterations to run in each timing test; default 10; negative
+    means number of seconds to iterator
 
   -n NUM
     Run each benchmark NUM times on each module; multiple allowed; 1000 if

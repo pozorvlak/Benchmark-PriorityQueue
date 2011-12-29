@@ -4,7 +4,7 @@ use Moose;
 use 5.10.0;
 
 use Carp;
-use Benchmark qw/timeit/;
+use Benchmark qw/timeit countit/;
 use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
@@ -19,7 +19,13 @@ sub time_method {
 		my $setup = pop @args;
 		$setup->($l);
 	}
-	return timeit($self->iterations, sub { $self->$method($l, @args) });
+	my $code_to_time = sub { $self->$method($l, @args) };
+	if ($self->iterations < 0) {
+		return countit(-$self->iterations, $code_to_time);
+	}
+	else {
+		return timeit(  $self->iterations, $code_to_time);
+	}
 }
 
 sub random_insert {
