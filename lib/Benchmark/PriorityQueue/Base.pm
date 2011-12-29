@@ -153,17 +153,21 @@ sub run_benchmark {
 sub print_benchmark {
 	local $| = 1;
 	my ($self, $bmark, $max_n) = @_;
-	my %bmarks = $self->benchmark_code();
-	my $f = $bmarks{$bmark};
 	my $start_time = DateTime->now();
 	for my $n (1 .. $max_n) {
-		my @time = @{$f->($self, 10**$n)};
+		my @time = @{ $self->time_benchmark($bmark, 10**$n) };
 		print $time[1] + $time[2];
 		last if $self->timed_out($start_time);
 		print ", " unless $n == $max_n;
 	}
 	print "\n";
 	return 1;
+}
+
+sub time_benchmark {
+	my ($self, $bmark, $n) = @_;
+	my %bmarks = $self->benchmark_code();
+	return $bmarks{$bmark}->($self, $n);
 }
 
 1;
