@@ -4,7 +4,7 @@ use Moose;
 use 5.10.0;
 
 use Carp;
-use Benchmark qw/:all/;
+use Benchmark qw/timeit/;
 use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
