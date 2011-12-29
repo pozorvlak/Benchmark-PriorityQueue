@@ -3,7 +3,6 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
-use Benchmark qw/:all/;
 use Set::Scalar;
 
 require Exporter;
