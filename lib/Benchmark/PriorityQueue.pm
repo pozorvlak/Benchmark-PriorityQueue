@@ -31,7 +31,6 @@ our @testers = (
 
 # Hash of [module name] => tester mappings
 our %testers = map { $_->module_tested() => $_ } @testers;
-# Names of all supported benchmarks
 
 sub all_tested_modules {
 	return sort(keys %testers);
