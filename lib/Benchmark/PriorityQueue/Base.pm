@@ -9,14 +9,6 @@ use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
 
-sub new {
-        my $this = shift;
-        my $class = ref($this) || $this;
-        my $self = {};
-        bless $self, $class;
-	return $self;
-}
-
 sub random_insert {
 	my ($self, $n) = @_;
 	my $l = $self->new_queue();
