@@ -10,7 +10,7 @@ WriteMakefile(
 	'Test::More' => 0.88,
 	'DateTime' => 0.70,
 	'DateTime::Duration' => 0.70,
-	'Set::Scalar' => 0.01,
+	'List::MoreUtils' => 0,
 	'Heap::Priority' => 0.01,
 	'List::Priority' => 0.03,
 	'List::PriorityQueue' => 0.01,

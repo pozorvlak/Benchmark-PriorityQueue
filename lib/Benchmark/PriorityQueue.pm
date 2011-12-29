@@ -3,7 +3,7 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
-use Set::Scalar;
+use List::MoreUtils qw(uniq);
 
 use Exporter qw(import);
 our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
@@ -40,9 +40,7 @@ sub all_tested_modules {
 }
 
 sub all_benchmarks {
-	my $benchmarks = Set::Scalar->new;
-	$benchmarks->insert($_->supported) for @testers;
-	return sort($benchmarks->members);
+	return sort uniq(map { $_->supported } @testers);
 }
 
 sub run_benchmark {
