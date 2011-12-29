@@ -12,7 +12,7 @@ my @modules = qw/
 /;
 
 for my $m (@modules) {
-	ok(defined $Benchmark::PriorityQueue::testers{$m},
+	ok(Benchmark::PriorityQueue::module_is_tested($m),
 		"There's a test object for $m");
 }
 

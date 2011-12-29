@@ -18,7 +18,7 @@ use Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
 use Benchmark::PriorityQueue::POE::Queue::Array;
 use Benchmark::PriorityQueue::POE::XS::Queue::Array;
 
-our @testers = (
+my @testers = (
 	Benchmark::PriorityQueue::List::Priority->new(),
 	Benchmark::PriorityQueue::List::PriorityQueue->new(),
 	Benchmark::PriorityQueue::Hash::PriorityQueue->new(),
@@ -29,7 +29,12 @@ our @testers = (
 );
 
 # Hash of [module name] => tester mappings
-our %testers = map { $_->module_tested() => $_ } @testers;
+my %testers = map { $_->module_tested() => $_ } @testers;
+
+sub module_is_tested {
+	my ($module) = @_;
+	return defined $testers{$module};
+}
 
 sub all_tested_modules {
 	return sort(keys %testers);
