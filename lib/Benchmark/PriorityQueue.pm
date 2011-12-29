@@ -10,23 +10,22 @@ our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
 
 our $VERSION = '0.01';
 
-use Benchmark::PriorityQueue::List::Priority;
-use Benchmark::PriorityQueue::List::PriorityQueue;
-use Benchmark::PriorityQueue::Hash::PriorityQueue;
-use Benchmark::PriorityQueue::Heap::Priority;
-use Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial;
-use Benchmark::PriorityQueue::POE::Queue::Array;
-use Benchmark::PriorityQueue::POE::XS::Queue::Array;
-
-my @testers = (
-	Benchmark::PriorityQueue::List::Priority->new(),
-	Benchmark::PriorityQueue::List::PriorityQueue->new(),
-	Benchmark::PriorityQueue::Hash::PriorityQueue->new(),
-	Benchmark::PriorityQueue::Heap::Priority->new(),
-	Benchmark::PriorityQueue::Data::PrioQ::SkewBinomial->new(),
-	Benchmark::PriorityQueue::POE::Queue::Array->new(),
-	Benchmark::PriorityQueue::POE::XS::Queue::Array->new(),
+my @testees = qw(
+	List::Priority
+	List::PriorityQueue
+	Hash::PriorityQueue
+	Heap::Priority
+	Data::PrioQ::SkewBinomial
+	POE::Queue::Array
+	POE::XS::Queue::Array
 );
+
+for my $module (@testees) {
+	(my $file = $module) =~ s{::}{/}g;
+	require "Benchmark/PriorityQueue/$file.pm";
+}
+
+my @testers = map { "Benchmark::PriorityQueue::$_"->new } @testees;
 
 # Hash of [module name] => tester mappings
 my %testers = map { $_->module_tested() => $_ } @testers;
