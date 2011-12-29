@@ -1,5 +1,5 @@
 package Benchmark::PriorityQueue::Base;
-use Moose;
+use Moose::Role;
 
 use 5.10.0;
 
@@ -8,119 +8,83 @@ use Benchmark qw/:all/;
 use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
-
-sub new {
-        my $this = shift;
-        my $class = ref($this) || $this;
-        my $self = {};
-        bless $self, $class;
-	return $self;
-}
-
-sub random_insert {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random($l, $n);
-	});
-}
-
-sub ordered_insert {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered($l, $n);
-	});
-}
-
-sub random_insert_mod3 {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random_mod3($l, $n);
-	});
-}
-
-sub ordered_insert_mod3 {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered_mod3($l, $n);
-	});
-}
+requires 'middles';
 
 sub insert_n_random {
-	my ($self, $l, $n) = @_;
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
 	for my $i (1 .. $n) {
 		$self->insert($l, $i, rand());
 	}
+	return $l;
 }
 
 sub insert_n_ordered {
-	my ($self, $l, $n) = @_;
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
 	for my $i (1 .. $n) {
 		$self->insert($l, $i, $i);
 	}
+	return $l;
 }
 
 sub insert_n_random_mod3 {
-	my ($self, $l, $n) = @_;
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
 	for my $i (1 .. $n) {
 		$self->insert($l, $i, int(rand(3)));
 	}
+	return $l;
 }
 
 sub insert_n_ordered_mod3 {
-	my ($self, $l, $n) = @_;
+	my ($self, $n) = @_;
+	my $l = $self->new_queue();
 	for my $i (1 .. $n) {
 		$self->insert($l, $i, $i % 3);
 	}
+	return $l;
 }
 
-sub pop_highest_ordered {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
-	});
+sub setups {
+	my ($self) = @_;
+	return (
+		ordered_mod3	=> \&insert_n_ordered_mod3,
+		random_mod3		=> \&insert_n_random_mod3,
+		ordered			=> \&insert_n_ordered,
+		random			=> \&insert_n_random,
+	);
 }
 
-sub pop_highest_ordered_mod3 {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
-	});
+# Given a setup function and some code to time, make a benchmarking sub.
+sub make_benchmark {
+	my ($self, $setup, $middle) = @_;
+	return sub {
+		my @args = $setup->(@_);
+		return timeit(10, sub {
+			$middle->(@args);
+		});
+	};
 }
 
-sub pop_highest_random {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
-	});
-}
-
-sub pop_highest_random_mod3 {
-	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
-	});
+# Identity function; serves as setup for benchmarks which are themselves
+# setup functions.
+sub id {
+	return @_;
 }
 
 sub benchmark_code {
 	my ($self) = @_;
-	my %supported = (
-		'random_insert' => \&random_insert,
-		'ordered_insert' => \&ordered_insert,
-		'random_insert_mod3' => \&random_insert_mod3,
-		'ordered_insert_mod3' => \&ordered_insert_mod3,
-	);
+	my %setups = $self->setups();
+	my %middles = $self->middles();
+	my %supported;
+	for my $setup (keys %setups) {
+		for my $middle (keys %middles) {
+			$supported{"${middle}_$setup"} =
+				$self->make_benchmark($setups{$setup}, $middles{$middle});
+		}
+		$supported{"setup_$setup"} = $self->make_benchmark(\&id, $setups{$setup});
+	}
 	return %supported;
 }
 
