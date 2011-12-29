@@ -8,6 +8,7 @@ use Benchmark qw/timeit/;
 use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
+has 'iterations' => (is => 'rw', isa => 'Int', default => 10);
 
 sub time_method {
 	my ($self, $method, @args) = @_;
@@ -18,7 +19,7 @@ sub time_method {
 		my $setup = pop @args;
 		$setup->($l);
 	}
-	return timeit(10, sub { $self->$method($l, @args) });
+	return timeit($self->iterations, sub { $self->$method($l, @args) });
 }
 
 sub random_insert {

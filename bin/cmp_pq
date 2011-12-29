@@ -13,6 +13,9 @@ Usage: cmp_pq [OPTION]...
 
 Options:
 
+  -i ITERATIONS
+    Number of iterations to time; default 10
+
   -n NUM
     Run each benchmark NUM times on each module; multiple allowed; 1000 if
     none specified
@@ -26,7 +29,7 @@ Options:
 
 EOF
 
-GetOptions(\my %opt, qw<n=i@ m=s@ b=s@ help|?>)
+GetOptions(\my %opt, qw<i=i n=i@ m=s@ b=s@ help|?>)
     or die $USAGE;
 
 if ($opt{help}) {
@@ -34,6 +37,7 @@ if ($opt{help}) {
     exit 0;
 }
 
+$opt{i} //= 10;
 $opt{n} ||= [1000];
 $opt{m} ||= [Benchmark::PriorityQueue::all_tested_modules()];
 $opt{b} ||= [Benchmark::PriorityQueue::all_benchmarks()];
@@ -59,7 +63,7 @@ my %abbr;
 for my $benchmark (@{ $opt{b} }) {
     my @benchmarkers =
         grep { $_->supports($benchmark) }
-        map  { "Benchmark::PriorityQueue::$_"->new }
+        map  { "Benchmark::PriorityQueue::$_"->new(iterations => $opt{i}) }
         @{ $opt{m} };
     for my $n (@{ $opt{n} }) {
         local $| = 1;
