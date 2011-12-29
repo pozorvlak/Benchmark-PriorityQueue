@@ -5,10 +5,9 @@ use strict;
 use warnings;
 use Set::Scalar;
 
-require Exporter;
-
-our @ISA = qw(Exporter);
+use Exporter qw(import);
 our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
+
 our $VERSION = '0.01';
 
 use Benchmark::PriorityQueue::List::Priority;
