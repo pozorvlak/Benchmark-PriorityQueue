@@ -9,36 +9,36 @@ use DateTime;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
 
+sub time_method {
+	my ($self, $method, @args) = @_;
+	my $l = $self->new_queue;
+	# Optional trailing coderef to set up the list for this test;
+	# receives $l as its sole argument
+	if (@args && ref $args[-1] eq 'CODE') {
+		my $setup = pop @args;
+		$setup->($l);
+	}
+	return timeit(10, sub { $self->$method($l, @args) });
+}
+
 sub random_insert {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random($l, $n);
-	});
+	return $self->time_method(insert_n_random => $n);
 }
 
 sub ordered_insert {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered($l, $n);
-	});
+	return $self->time_method(insert_n_ordered => $n);
 }
 
 sub random_insert_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	return timeit(10, sub {
-		$self->insert_n_random_mod3($l, $n);
-	});
+	return $self->time_method(insert_n_random_mod3 => $n);
 }
 
 sub ordered_insert_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-		return timeit(10, sub {
-		$self->insert_n_ordered_mod3($l, $n);
-	});
+	return $self->time_method(insert_n_ordered_mod3 => $n);
 }
 
 sub insert_n_random {
@@ -71,37 +71,29 @@ sub insert_n_ordered_mod3 {
 
 sub pop_highest_ordered {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered(@_, $n);
 	});
 }
 
 sub pop_highest_ordered_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered_mod3(@_, $n);
 	});
 }
 
 sub pop_highest_random {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random(@_, $n);
 	});
 }
 
 sub pop_highest_random_mod3 {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random_mod3($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random_mod3(@_, $n);
 	});
 }
 

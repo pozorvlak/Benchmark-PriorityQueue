@@ -1,6 +1,5 @@
 package Benchmark::PriorityQueue::PopsHighest;
 use Moose::Role;
-use Benchmark qw/timeit/;
 
 requires 'pop_highest';
 
@@ -14,19 +13,15 @@ around 'benchmark_code' => sub {
 
 sub pop_highest_random {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_random($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random(@_, $n);
 	});
 }
 
 sub pop_highest_ordered {
 	my ($self, $n) = @_;
-	my $l = $self->new_queue();
-	$self->insert_n_ordered($l, $n);
-	return timeit(10, sub {
-		$self->pop_highest($l);
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered(@_, $n);
 	});
 }
 
