@@ -1,0 +1,77 @@
+#! /usr/bin/perl
+
+use v5.10;
+use strict;
+use warnings;
+
+use Benchmark qw<cmpthese>;
+use Benchmark::PriorityQueue;
+use Getopt::Long qw<GetOptions :config gnu_getopt>;
+
+my $USAGE = <<'EOF';
+Usage: cmp_pq [OPTION]...
+
+Options:
+
+  -n NUM
+    Run each benchmark NUM times on each module; multiple allowed; 1000 if
+    none specified
+
+  -m MODULE
+    Module to benchmark, like List::Priority; multiple allowed; all if none
+    specified
+
+  -b BENCHMARK
+    Benchmark to run; multiple allowed; all if none specified
+
+EOF
+
+GetOptions(\my %opt, qw<n=i@ m=s@ b=s@ help|?>)
+    or die $USAGE;
+
+if ($opt{help}) {
+    print $USAGE;
+    exit 0;
+}
+
+$opt{n} ||= [1000];
+$opt{m} ||= [Benchmark::PriorityQueue::all_tested_modules()];
+$opt{b} ||= [Benchmark::PriorityQueue::all_benchmarks()];
+
+my %abbr;
+{
+    my %seen;
+    for my $module (@{ $opt{m} }) {
+        (my $abbr = $module)
+            =~ s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ ) //xmsg;
+        $abbr =~ s/::/:/g;
+        my $disambiguated = $abbr;
+        for (my $n = 1; ; $disambiguated = sprintf '%s-%d', $abbr, ++$n) {
+            if (!$seen{$disambiguated}++) {
+                say "$disambiguated = $module";
+                $abbr{$module} = $disambiguated;
+                last;
+            }
+        }
+    }
+}
+
+for my $benchmark (@{ $opt{b} }) {
+    my @benchmarkers =
+        grep { $_->supports($benchmark) }
+        map  { "Benchmark::PriorityQueue::$_"->new }
+        @{ $opt{m} };
+    for my $n (@{ $opt{n} }) {
+        local $| = 1;
+        say '';
+        print "Running $benchmark on ", scalar @benchmarkers, " modules, n=$n ";
+        my %result;
+        for my $benchmarker (@benchmarkers) {
+            print '.';
+            my $abbr = $abbr{ $benchmarker->module_tested };
+            $result{$abbr} = $benchmarker->time_benchmark($benchmark, $n);
+        }
+        say '';
+        cmpthese(\%result);
+    }
+}
