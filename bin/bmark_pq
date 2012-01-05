@@ -39,6 +39,7 @@ if (@benchmarks == 0) {
 
 sub usage {
 	my ($status) = @_;
+	select STDERR if $status != 0;
 	say <<END;
 Usage:
     $0  -n [exp] -t [timeout] -m [module 1] -m [module 2] -b [benchmark 1] ...
