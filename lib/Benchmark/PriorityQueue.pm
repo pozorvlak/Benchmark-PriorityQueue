@@ -40,7 +40,7 @@ sub all_tested_modules {
 }
 
 sub all_benchmarks {
-	return sort uniq(map { $_->supported } @testers);
+	return sort +uniq(map { $_->supported } @testers);
 }
 
 sub run_benchmark {
