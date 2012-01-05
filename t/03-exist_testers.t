@@ -1,5 +1,5 @@
 use Test::More;
-use Benchmark::PriorityQueue;
+use Benchmark::PriorityQueue qw<all_tested_modules>;
 
 my @modules = qw/
 	List::Priority
@@ -16,8 +16,7 @@ for my $m (@modules) {
 		"There's a test object for $m");
 }
 
-is_deeply([sort(@modules)],
-	[sort(Benchmark::PriorityQueue::all_tested_modules())],
+is_deeply([sort(@modules)], [sort(all_tested_modules())],
 	"all_tested_modules returns expected result");
 
 done_testing;

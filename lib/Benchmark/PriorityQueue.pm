@@ -7,7 +7,7 @@ use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
+our @EXPORT_OK = qw(run_all_benchmarks run_benchmark all_benchmarks all_tested_modules);
 
 our $VERSION = '0.01';
 
@@ -81,7 +81,14 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
 =head1 SYNOPSIS
 
-  use Benchmark::PriorityQueue qw/run_benchmark run_all_benchmarks/;
+  use Benchmark::PriorityQueue qw/all_benchmarks all_tested_modules
+                                  run_benchmark run_all_benchmarks/;
+
+  # All benchmark names
+  my @benchmarks = all_benchmarks();
+
+  # The names of all underlying priority-queue modules tested
+  my @modules = all_tested_modules();
 
   # Run only the benchmark you care about
   run_benchmark('random_insert', 6, "List::Priority", "Hash::PriorityQueue");

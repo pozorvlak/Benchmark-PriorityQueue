@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark';
+use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark all_benchmarks all_tested_modules';
 use Getopt::Long;
 use DateTime::Duration;
 
@@ -62,10 +62,10 @@ END
 
 sub print_benchmarks {
 	say "Available benchmarks:";
-	print(map { "   $_\n" } Benchmark::PriorityQueue::all_benchmarks());
+	print(map { "   $_\n" } all_benchmarks());
 }
 
 sub print_modules {
 	say "Available modules to benchmark:";
-	print(map { "   $_\n" } Benchmark::PriorityQueue::all_tested_modules());
+	print(map { "   $_\n" } all_tested_modules());
 }

@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Benchmark qw<cmpthese>;
-use Benchmark::PriorityQueue;
+use Benchmark::PriorityQueue qw<all_benchmarks>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
 my $USAGE = <<'EOF';
@@ -40,8 +40,8 @@ if ($opt{help}) {
 
 $opt{i} //= 10;
 $opt{n} ||= [1000];
-$opt{m} ||= [Benchmark::PriorityQueue::all_tested_modules()];
-$opt{b} ||= [Benchmark::PriorityQueue::all_benchmarks()];
+$opt{m} ||= [all_tested_modules()];
+$opt{b} ||= [all_benchmarks()];
 
 my %abbr;
 {
