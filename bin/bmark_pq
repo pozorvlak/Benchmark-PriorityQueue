@@ -21,6 +21,8 @@ if ($help) {
 	usage(0);
 }
 
+usage(2) if @ARGV;
+
 if (defined $timeout) {
 	$timeout = DateTime::Duration->new(seconds => $timeout);
 } else {
