@@ -14,10 +14,11 @@ GetOptions ("m=s" => \@modules,
 	    "b=s" => \@benchmarks,
 	    "n=i" => \$n,
 	    "t=i" => \$timeout,
-	    "h"   => \$help);
+	    "h"   => \$help)
+	or usage(2);
 
 if ($help) {
-	usage();
+	usage(0);
 }
 
 if (defined $timeout) {
@@ -35,6 +36,7 @@ if (@benchmarks == 0) {
 }
 
 sub usage {
+	my ($status) = @_;
 	say <<END;
 Usage:
     $0  -n [exp] -t [timeout] -m [module 1] -m [module 2] -b [benchmark 1] ...
@@ -58,7 +60,7 @@ END
 	say "";
 	print_modules();
 	say "";
-	exit 0;
+	exit $status;
 }
 
 sub print_benchmarks {
