@@ -11,12 +11,15 @@ my @modules = qw/
 	POE::XS::Queue::Array
 /;
 
-for my $m (@modules) {
-	ok(Benchmark::PriorityQueue::module_is_tested($m),
-		"There's a test object for $m");
-}
+my @modules_found = all_tested_modules();
 
-is_deeply([sort(@modules)], [sort(all_tested_modules())],
+is_deeply([sort @modules], [sort @modules_found],
 	"all_tested_modules returns expected result");
+
+my %module_found = map { $_ => 1 } @modules_found;
+
+for my $m (@modules) {
+	ok($module_found{$m}, "There's a test object for $m");
+}
 
 done_testing;

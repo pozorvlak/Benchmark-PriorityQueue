@@ -30,11 +30,6 @@ my @testers = map { "Benchmark::PriorityQueue::$_"->new } @testees;
 # Hash of [module name] => tester mappings
 my %testers = map { $_->module_tested() => $_ } @testers;
 
-sub module_is_tested {
-	my ($module) = @_;
-	return defined $testers{$module};
-}
-
 sub all_tested_modules {
 	return sort(keys %testers);
 }
