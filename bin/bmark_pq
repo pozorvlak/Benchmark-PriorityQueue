@@ -23,11 +23,7 @@ if ($help) {
 
 usage(2) if @ARGV;
 
-if (defined $timeout) {
-	$timeout = DateTime::Duration->new(seconds => $timeout);
-} else {
-	$timeout = DateTime::Duration->new(seconds => 0);
-}
+$timeout = DateTime::Duration->new(seconds => $timeout // 0);
 
 if (@benchmarks == 0) {
 	run_all_benchmarks($n, $timeout, @modules);
