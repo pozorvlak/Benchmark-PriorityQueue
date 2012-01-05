@@ -3,6 +3,7 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
+use List::Util qw(sum);
 use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
@@ -60,11 +61,8 @@ sub run_benchmark {
 
 sub run_all_benchmarks {
 	my ($n, $timeout, @modules) = @_;
-	my $bmarks_run = 0;
-	foreach my $bmark (all_benchmarks()) {
-		$bmarks_run += run_benchmark($bmark, $n, $timeout, @modules);
-	}
-	return $bmarks_run;
+	return sum 0,
+	    map { run_benchmark($_, $n, $timeout, @modules) } all_benchmarks();
 }
 
 1;
