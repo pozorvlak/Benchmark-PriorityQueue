@@ -3,12 +3,11 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
-use List::Util qw(sum);
 use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_all_benchmarks run_benchmark all_benchmarks all_tested_modules);
+our @EXPORT_OK = qw(run_benchmark all_benchmarks all_tested_modules);
 
 our $VERSION = '0.01';
 
@@ -59,12 +58,6 @@ sub run_benchmark {
 	return $result;
 }
 
-sub run_all_benchmarks {
-	my ($n, $timeout, @modules) = @_;
-	return sum 0,
-	    map { run_benchmark($_, $n, $timeout, @modules) } all_benchmarks();
-}
-
 1;
 __END__
 
@@ -75,7 +68,7 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 =head1 SYNOPSIS
 
   use Benchmark::PriorityQueue qw/all_benchmarks all_tested_modules
-                                  run_benchmark run_all_benchmarks/;
+                                  run_benchmark/;
 
   # All benchmark names
   my @benchmarks = all_benchmarks();
@@ -87,7 +80,8 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
   run_benchmark('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
 
   # Benchmark ALL THE FEATURES
-  run_all_benchmarks();
+  run_benchmark($_, 6, all_tested_modules())
+      for all_benchmarks();
 
 =head1 DESCRIPTION
 

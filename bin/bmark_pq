@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark all_benchmarks all_tested_modules';
+use Benchmark::PriorityQueue qw'run_benchmark all_benchmarks all_tested_modules';
 use Getopt::Long;
 use DateTime::Duration;
 
@@ -24,14 +24,10 @@ if ($help) {
 usage(2) if @ARGV;
 
 $timeout = DateTime::Duration->new(seconds => $timeout // 0);
+@benchmarks = all_benchmarks() if !@benchmarks;
 
-if (@benchmarks == 0) {
-	run_all_benchmarks($n, $timeout, @modules);
-} else {
-	for my $bmark (@benchmarks) {
-		run_benchmark($bmark, $n, $timeout, @modules);
-	}
-}
+run_benchmark($_, $n, $timeout, @modules)
+	for @benchmarks;
 
 sub usage {
 	my ($status) = @_;
