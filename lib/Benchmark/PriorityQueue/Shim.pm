@@ -110,19 +110,6 @@ sub timed_out {
 	return 0;
 }
 
-sub run_workload {
-	my ($self, $task, $max_rank_exponent) = @_;
-	my %tasks = $self->task_code();
-	my $f = $tasks{$task};
-	my @results;
-	my $start_time = DateTime->now();
-	for my $rank_exponent (1 .. $max_rank_exponent) {
-		push @results, $f->($self, 10**$rank_exponent);
-		last if $self->timed_out($start_time);
-	}
-	return @results;
-}
-
 sub print_benchmark {
 	local $| = 1;
 	my ($self, $task, $max_rank_exponent) = @_;
