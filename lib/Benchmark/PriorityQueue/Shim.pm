@@ -9,8 +9,8 @@ use DateTime;
 
 requires qw<new_queue backend insert>;
 
-has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
-has 'iterations' => (is => 'rw', isa => 'Int', default => 10);
+has timeout    => (is => 'ro', isa => 'DateTime::Duration');
+has iterations => (is => 'ro', isa => 'Int', default => 10);
 
 sub time_method {
 	my ($self, $method, @args) = @_;
