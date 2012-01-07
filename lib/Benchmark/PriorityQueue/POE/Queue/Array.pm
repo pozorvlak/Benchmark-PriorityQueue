@@ -1,8 +1,8 @@
 package Benchmark::PriorityQueue::POE::Queue::Array;
 use Moose;
 
-extends 'Benchmark::PriorityQueue::Base';
-with 'Benchmark::PriorityQueue::PopsHighest';
+with qw<Benchmark::PriorityQueue::Shim
+        Benchmark::PriorityQueue::PopsHighest>;
 
 use POE::Queue::Array;
 

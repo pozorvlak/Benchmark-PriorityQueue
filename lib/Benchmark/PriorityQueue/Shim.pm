@@ -1,11 +1,13 @@
-package Benchmark::PriorityQueue::Base;
-use Moose;
+package Benchmark::PriorityQueue::Shim;
+use Moose::Role;
 
 use 5.10.0;
 
 use namespace::autoclean;
 use Benchmark qw/timeit countit/;
 use DateTime;
+
+requires qw<new_queue module_tested insert>;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
 has 'iterations' => (is => 'rw', isa => 'Int', default => 10);
