@@ -47,10 +47,10 @@ sub run_workload {
 	}
 	say $task;
 	for my $backend (@backends) {
-		my $shim = $shim_for_backend{$backend};
-		$shim->timeout($timeout);
-		die "No shim for $backend" unless defined $shim;
+		my $shim = $shim_for_backend{$backend}
+			// die "No shim for $backend\n";
 		next unless $shim->supports($task);
+		$shim->timeout($timeout);
 		print $shim->backend, ", ";
 		$result = $shim->print_benchmark($task, $max_rank_exponent);
 	}
