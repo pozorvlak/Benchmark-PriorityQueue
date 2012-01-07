@@ -3,7 +3,6 @@ use Moose;
 
 use 5.10.0;
 
-use Carp;
 use Benchmark qw/timeit countit/;
 use DateTime;
 
