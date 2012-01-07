@@ -76,24 +76,10 @@ sub insert_n_ordered_mod3 {
 	}
 }
 
-sub pop_highest_ordered {
-	my ($self, $n) = @_;
-	return $self->time_method(pop_highest => sub {
-		$self->insert_n_ordered(@_, $n);
-	});
-}
-
 sub pop_highest_ordered_mod3 {
 	my ($self, $n) = @_;
 	return $self->time_method(pop_highest => sub {
 		$self->insert_n_ordered_mod3(@_, $n);
-	});
-}
-
-sub pop_highest_random {
-	my ($self, $n) = @_;
-	return $self->time_method(pop_highest => sub {
-		$self->insert_n_random(@_, $n);
 	});
 }
 
