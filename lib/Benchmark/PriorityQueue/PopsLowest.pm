@@ -5,9 +5,11 @@ requires 'pop_lowest';
 
 around 'benchmark_code' => sub {
 	my ($orig, $self) = @_;
-	my %supported = $self->$orig();
-	$supported{pop_lowest_ordered} = \&pop_lowest_ordered;
-	$supported{pop_lowest_random} = \&pop_lowest_random;
+	my %supported = (
+		$self->$orig(),
+		pop_lowest_ordered => \&pop_lowest_ordered,
+		pop_lowest_random  => \&pop_lowest_random,
+	);
 	return %supported;
 };
 
