@@ -7,8 +7,10 @@ around 'benchmark_code' => sub {
 	my ($orig, $self) = @_;
 	my %supported = (
 		$self->$orig,
-		pop_highest_ordered => \&pop_highest_ordered,
-		pop_highest_random  => \&pop_highest_random,
+		pop_highest_ordered      => \&pop_highest_ordered,
+		pop_highest_ordered_mod3 => \&pop_highest_ordered_mod3,
+		pop_highest_random       => \&pop_highest_random,
+		pop_highest_random_mod3  => \&pop_highest_random_mod3,
 	);
 	return %supported;
 };
