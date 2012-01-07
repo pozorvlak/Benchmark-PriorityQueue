@@ -40,7 +40,7 @@ sub all_tasks {
 
 sub run_workload {
 	my ($task, $max_rank_exponent, $timeout, @backends) = @_;
-	my $result;
+	my $result = 0;
 	if (@backends == 0) {
 		# If no backends specified, test them all.
 		@backends = all_backends();
@@ -52,7 +52,7 @@ sub run_workload {
 		next unless $shim->supports($task);
 		$shim->timeout($timeout);
 		print $shim->backend, ", ";
-		$result = $shim->print_benchmark($task, $max_rank_exponent);
+		$result += $shim->print_benchmark($task, $max_rank_exponent);
 	}
 	say "";
 	return $result;
