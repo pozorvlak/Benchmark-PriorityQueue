@@ -1,5 +1,5 @@
 use Test::More;
-use Benchmark::PriorityQueue qw<all_tested_modules>;
+use Benchmark::PriorityQueue qw<all_backends>;
 
 my @modules = qw/
 	List::Priority
@@ -11,15 +11,15 @@ my @modules = qw/
 	POE::XS::Queue::Array
 /;
 
-my @modules_found = all_tested_modules();
+my @modules_found = all_backends();
 
 is_deeply([sort @modules], [sort @modules_found],
-	"all_tested_modules returns expected result");
+	"all_backends returns expected result");
 
 my %module_found = map { $_ => 1 } @modules_found;
 
 for my $m (@modules) {
-	ok($module_found{$m}, "There's a test object for $m");
+	ok($module_found{$m}, "There's a backend for $m");
 }
 
 done_testing;

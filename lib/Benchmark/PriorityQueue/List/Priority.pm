@@ -26,7 +26,7 @@ sub pop_lowest {
 	return $l->shift();
 }
 
-sub module_tested {
+sub backend {
 	return 'List::Priority';
 }
 

@@ -20,7 +20,7 @@ sub pop_highest {
 	return $l->dequeue_next();
 }
 
-sub module_tested {
+sub backend {
 	return 'POE::XS::Queue::Array';
 }
 

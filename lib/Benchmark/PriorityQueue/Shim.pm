@@ -7,7 +7,7 @@ use namespace::autoclean;
 use Benchmark qw/timeit countit/;
 use DateTime;
 
-requires qw<new_queue module_tested insert>;
+requires qw<new_queue backend insert>;
 
 has 'timeout' => (is => 'rw', isa => 'DateTime::Duration');
 has 'iterations' => (is => 'rw', isa => 'Int', default => 10);
@@ -31,54 +31,54 @@ sub time_method {
 }
 
 sub random_insert {
-	my ($self, $n) = @_;
-	return $self->time_method(insert_n_random => $n);
+	my ($self, $rank) = @_;
+	return $self->time_method(insert_n_random => $rank);
 }
 
 sub ordered_insert {
-	my ($self, $n) = @_;
-	return $self->time_method(insert_n_ordered => $n);
+	my ($self, $rank) = @_;
+	return $self->time_method(insert_n_ordered => $rank);
 }
 
 sub random_insert_mod3 {
-	my ($self, $n) = @_;
-	return $self->time_method(insert_n_random_mod3 => $n);
+	my ($self, $rank) = @_;
+	return $self->time_method(insert_n_random_mod3 => $rank);
 }
 
 sub ordered_insert_mod3 {
-	my ($self, $n) = @_;
-	return $self->time_method(insert_n_ordered_mod3 => $n);
+	my ($self, $rank) = @_;
+	return $self->time_method(insert_n_ordered_mod3 => $rank);
 }
 
 sub insert_n_random {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
+	my ($self, $l, $rank) = @_;
+	for my $i (1 .. $rank) {
 		$self->insert($l, $i, rand());
 	}
 }
 
 sub insert_n_ordered {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
+	my ($self, $l, $rank) = @_;
+	for my $i (1 .. $rank) {
 		$self->insert($l, $i, $i);
 	}
 }
 
 sub insert_n_random_mod3 {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
+	my ($self, $l, $rank) = @_;
+	for my $i (1 .. $rank) {
 		$self->insert($l, $i, int(rand(3)));
 	}
 }
 
 sub insert_n_ordered_mod3 {
-	my ($self, $l, $n) = @_;
-	for my $i (1 .. $n) {
+	my ($self, $l, $rank) = @_;
+	for my $i (1 .. $rank) {
 		$self->insert($l, $i, $i % 3);
 	}
 }
 
-sub benchmark_code {
+sub task_code {
 	my ($self) = @_;
 	my %supported = (
 		'random_insert' => \&random_insert,
@@ -91,14 +91,14 @@ sub benchmark_code {
 
 sub supported {
 	my ($self) = @_;
-	my %bmarks = $self->benchmark_code;
-	return keys %bmarks;
+	my %tasks = $self->task_code;
+	return keys %tasks;
 }
 
 sub supports {
-	my ($self, $bmark) = @_;
-	my %bmarks = $self->benchmark_code;
-	return exists $bmarks{$bmark};
+	my ($self, $task) = @_;
+	my %tasks = $self->task_code;
+	return exists $tasks{$task};
 }
 
 sub timed_out {
@@ -110,14 +110,14 @@ sub timed_out {
 	return 0;
 }
 
-sub run_benchmark {
-	my ($self, $bmark, $max_n) = @_;
-	my %bmarks = $self->benchmark_code();
-	my $f = $bmarks{$bmark};
+sub run_workload {
+	my ($self, $task, $max_rank_exponent) = @_;
+	my %tasks = $self->task_code();
+	my $f = $tasks{$task};
 	my @results;
 	my $start_time = DateTime->now();
-	for my $n (1 .. $max_n) {
-		push @results, $f->($self, 10**$n);
+	for my $rank_exponent (1 .. $max_rank_exponent) {
+		push @results, $f->($self, 10**$rank_exponent);
 		last if $self->timed_out($start_time);
 	}
 	return @results;
@@ -125,22 +125,22 @@ sub run_benchmark {
 
 sub print_benchmark {
 	local $| = 1;
-	my ($self, $bmark, $max_n) = @_;
+	my ($self, $task, $max_rank_exponent) = @_;
 	my $start_time = DateTime->now();
-	for my $n (1 .. $max_n) {
-		my @time = @{ $self->time_benchmark($bmark, 10**$n) };
+	for my $rank_exponent (1 .. $max_rank_exponent) {
+		my @time = @{ $self->time_workload($task, 10**$rank_exponent) };
 		print $time[1] + $time[2];
 		last if $self->timed_out($start_time);
-		print ", " unless $n == $max_n;
+		print ", " if $rank_exponent < $max_rank_exponent;
 	}
 	print "\n";
 	return 1;
 }
 
-sub time_benchmark {
-	my ($self, $bmark, $n) = @_;
-	my %bmarks = $self->benchmark_code();
-	return $bmarks{$bmark}->($self, $n);
+sub time_workload {
+	my ($self, $task, $rank) = @_;
+	my %tasks = $self->task_code();
+	return $tasks{$task}->($self, $rank);
 }
 
 1;

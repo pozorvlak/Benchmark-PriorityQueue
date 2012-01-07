@@ -22,7 +22,7 @@ sub pop_lowest {
 	return $item;
 }
 
-sub module_tested {
+sub backend {
 	return "Data::PrioQ::SkewBinomial";
 }
 

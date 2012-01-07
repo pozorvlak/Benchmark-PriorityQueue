@@ -3,18 +3,16 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue qw'run_benchmark all_benchmarks all_tested_modules';
+use Benchmark::PriorityQueue qw<run_workload all_tasks all_backends>;
 use Getopt::Long;
 use DateTime::Duration;
 
-my $default_n = 3;
-my @modules; my @benchmarks; my $help; my $timeout;
-my $n = $default_n;
-GetOptions ("m=s" => \@modules,
-	    "b=s" => \@benchmarks,
-	    "n=i" => \$n,
-	    "t=i" => \$timeout,
-	    "help|?|h" => \$help)
+my $default_max_rank_exponent = 3;
+GetOptions("m=s"      => \ my @backends,
+	   "b=s"      => \ my @tasks,
+	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
+	   "t=i"      => \ my $timeout,
+	   "help|?|h" => \ my $help)
 	or usage(2);
 
 if ($help) {
@@ -24,44 +22,44 @@ if ($help) {
 usage(2) if @ARGV;
 
 $timeout = DateTime::Duration->new(seconds => $timeout // 0);
-@benchmarks = all_benchmarks() if !@benchmarks;
+@tasks = all_tasks() if !@tasks;
 
-run_benchmark($_, $n, $timeout, @modules)
-	for @benchmarks;
+run_workload($_, $max_rank_exponent, $timeout, @backends)
+	for @tasks;
 
 sub usage {
 	my ($status) = @_;
 	select STDERR if $status != 0;
 	say <<END;
 Usage:
-    $0  -n [exp] -t [timeout] -m [module 1] -m [module 2] -b [benchmark 1] ...
+    $0  -n [exp] -t [timeout] -m [backend 1] -m [backend 2] -b [task 1] ...
 
-Options: 
-    -m  Module to benchmark, eg List::Priority. If no -m options are given, all
-        priority queue modules are benchmarked.
+Options:
+    -m  Backend to benchmark, eg List::Priority. If no -m options are given, all
+        priority queue backends are benchmarked.
 
-    -b  Benchmark to run. If no -b options are given, all benchmarks are run.
+    -b  Task to run. If no -b options are given, all tasks are run.
 
-    -n  Maximum exponent to use. For example, if -n 3 is used, data-structures
-        of at most 1000 elements (= 10^3) are used for benchmarking.
-	Defaults to $default_n.
+    -n  Maximum rank exponent to use. For example, if -n 3 is used,
+        data-structures of at most 1000 elements (= 10^3) are used for
+        benchmarking.  Defaults to $default_max_rank_exponent.
 
     -t  Timeout in seconds. If this time is exceeded for a given
-	benchmark/module pair, we give up and move on to the next one.
+	task/backend pair, we give up and move on to the next one.
 END
-	print_benchmarks();
+	print_tasks();
 	say "";
-	print_modules();
+	print_backends();
 	say "";
 	exit $status;
 }
 
-sub print_benchmarks {
-	say "Available benchmarks:";
-	print(map { "   $_\n" } all_benchmarks());
+sub print_tasks {
+	say "Available tasks:";
+	print(map { "   $_\n" } all_tasks());
 }
 
-sub print_modules {
-	say "Available modules to benchmark:";
-	print(map { "   $_\n" } all_tested_modules());
+sub print_backends {
+	say "Available backends to benchmark:";
+	print(map { "   $_\n" } all_backends());
 }

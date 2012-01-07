@@ -20,7 +20,7 @@ sub pop_lowest {
 	return $l->pop();
 }
 
-sub module_tested {
+sub backend {
 	return 'Hash::PriorityQueue';
 }
 

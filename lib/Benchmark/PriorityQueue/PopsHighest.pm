@@ -3,7 +3,7 @@ use Moose::Role;
 
 requires 'pop_highest';
 
-around 'benchmark_code' => sub {
+around 'task_code' => sub {
 	my ($orig, $self) = @_;
 	my %supported = (
 		$self->$orig,
@@ -16,30 +16,30 @@ around 'benchmark_code' => sub {
 };
 
 sub pop_highest_random {
-	my ($self, $n) = @_;
+	my ($self, $rank) = @_;
 	return $self->time_method(pop_highest => sub {
-		$self->insert_n_random(@_, $n);
+		$self->insert_n_random(@_, $rank);
 	});
 }
 
 sub pop_highest_ordered {
-	my ($self, $n) = @_;
+	my ($self, $rank) = @_;
 	return $self->time_method(pop_highest => sub {
-		$self->insert_n_ordered(@_, $n);
+		$self->insert_n_ordered(@_, $rank);
 	});
 }
 
 sub pop_highest_ordered_mod3 {
-	my ($self, $n) = @_;
+	my ($self, $rank) = @_;
 	return $self->time_method(pop_highest => sub {
-		$self->insert_n_ordered_mod3(@_, $n);
+		$self->insert_n_ordered_mod3(@_, $rank);
 	});
 }
 
 sub pop_highest_random_mod3 {
-	my ($self, $n) = @_;
+	my ($self, $rank) = @_;
 	return $self->time_method(pop_highest => sub {
-		$self->insert_n_random_mod3(@_, $n);
+		$self->insert_n_random_mod3(@_, $rank);
 	});
 }
 

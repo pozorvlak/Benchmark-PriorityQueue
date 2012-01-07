@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Benchmark qw<cmpthese>;
-use Benchmark::PriorityQueue qw<all_benchmarks>;
+use Benchmark::PriorityQueue qw<all_backends all_tasks>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
 my $USAGE = <<'EOF';
@@ -18,15 +18,15 @@ Options:
     means number of seconds to iterate
 
   -n NUM
-    Run each benchmark NUM times on each module; multiple allowed; 1000 if
+    Use NUM as the "rank" for each workload; multiple allowed; 1000 if
     none specified
 
-  -m MODULE
-    Module to benchmark, like List::Priority; multiple allowed; all if none
-    specified
+  -m BACKEND
+    Backend module to benchmark, like List::Priority; multiple allowed; all
+    if none specified
 
-  -b BENCHMARK
-    Benchmark to run; multiple allowed; all if none specified
+  -b TASK
+    Task to run; multiple allowed; all if none specified
 
 EOF
 
@@ -40,41 +40,41 @@ if ($opt{help}) {
 
 $opt{i} //= 10;
 $opt{n} ||= [1000];
-$opt{m} ||= [all_tested_modules()];
-$opt{b} ||= [all_benchmarks()];
+$opt{m} ||= [all_backends()];
+$opt{b} ||= [all_tasks()];
 
 my %abbr;
 {
     my %seen;
-    for my $module (@{ $opt{m} }) {
-        (my $abbr = $module)
+    for my $backend (@{ $opt{m} }) {
+        (my $abbr = $backend)
             =~ s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ ) //xmsg;
         $abbr =~ s/::/:/g;
         my $disambiguated = $abbr;
         for (my $n = 1; ; $disambiguated = sprintf '%s-%d', $abbr, ++$n) {
             if (!$seen{$disambiguated}++) {
-                say "$disambiguated = $module";
-                $abbr{$module} = $disambiguated;
+                say "$disambiguated = $backend";
+                $abbr{$backend} = $disambiguated;
                 last;
             }
         }
     }
 }
 
-for my $benchmark (@{ $opt{b} }) {
-    my @benchmarkers =
-        grep { $_->supports($benchmark) }
+for my $task (@{ $opt{b} }) {
+    my @shims =
+        grep { $_->supports($task) }
         map  { "Benchmark::PriorityQueue::$_"->new(iterations => $opt{i}) }
         @{ $opt{m} };
-    for my $n (@{ $opt{n} }) {
+    for my $rank (@{ $opt{n} }) {
         local $| = 1;
         say '';
-        print "Running $benchmark on ", scalar @benchmarkers, " modules, n=$n ";
+        print "Running $task on ", scalar @shims, " backends, rank=$rank ";
         my %result;
-        for my $benchmarker (@benchmarkers) {
+        for my $shim (@shims) {
             print '.';
-            my $abbr = $abbr{ $benchmarker->module_tested };
-            $result{$abbr} = $benchmarker->time_benchmark($benchmark, $n);
+            my $abbr = $abbr{ $shim->backend };
+            $result{$abbr} = $shim->time_workload($task, $rank);
         }
         say '';
         cmpthese(\%result);

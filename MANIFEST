@@ -5,7 +5,7 @@ README
 t/01-use.t
 t/02-run-all.t
 t/03-exist_testers.t
-t/04-all_benchmarks.t
+t/04-all_tasks.t
 lib/Benchmark/PriorityQueue/Shim.pm
 lib/Benchmark/PriorityQueue/PopsHighest.pm
 lib/Benchmark/PriorityQueue/PopsLowest.pm
