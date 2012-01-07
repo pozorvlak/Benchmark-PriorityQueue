@@ -3,6 +3,7 @@ use Moose;
 
 use 5.10.0;
 
+use namespace::autoclean;
 use Benchmark qw/timeit countit/;
 use DateTime;
 

@@ -7,6 +7,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Benchmark/PriorityQueue.pm', # finds $VERSION
     PREREQ_PM         => {
 	'Moose' => 2.0401,
+        'namespace::autoclean' => 0,
 	'Test::More' => 0.88,
 	'DateTime' => 0.70,
 	'DateTime::Duration' => 0.70,
