@@ -4,6 +4,7 @@ use 5.010000;
 use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
+use Module::Load;
 
 use Exporter qw(import);
 our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
@@ -21,8 +22,7 @@ my @testees = qw(
 );
 
 for my $module (@testees) {
-	(my $file = $module) =~ s{::}{/}g;
-	require "Benchmark/PriorityQueue/$file.pm";
+	load "Benchmark::PriorityQueue::$module";
 }
 
 my @testers = map { "Benchmark::PriorityQueue::$_"->new } @testees;
