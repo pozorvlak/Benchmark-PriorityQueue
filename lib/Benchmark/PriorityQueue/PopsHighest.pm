@@ -25,4 +25,18 @@ sub pop_highest_ordered {
 	});
 }
 
+sub pop_highest_ordered_mod3 {
+	my ($self, $n) = @_;
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_ordered_mod3(@_, $n);
+	});
+}
+
+sub pop_highest_random_mod3 {
+	my ($self, $n) = @_;
+	return $self->time_method(pop_highest => sub {
+		$self->insert_n_random_mod3(@_, $n);
+	});
+}
+
 1;
