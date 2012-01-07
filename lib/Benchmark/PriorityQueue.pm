@@ -7,7 +7,7 @@ use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_workload all_tasks all_backends);
+our @EXPORT_OK = qw(run_workload all_tasks all_backends make_shim);
 
 our $VERSION = '0.01';
 
@@ -25,17 +25,18 @@ for my $backend (@backends) {
 	load "Benchmark::PriorityQueue::$backend";
 }
 
-my @shims = map { "Benchmark::PriorityQueue::$_"->new } @backends;
-
-# Hash from backend name to shim instance
-my %shim_for_backend = map { $_->backend => $_ } @shims;
+sub make_shim {
+	my ($backend, @constructor_args) = @_;
+	my $shim_class = "Benchmark::PriorityQueue::$backend";
+	return $shim_class->new(@constructor_args);
+}
 
 sub all_backends {
 	return sort @backends;
 }
 
 sub all_tasks {
-	return sort +uniq(map { $_->supported } @shims);
+	return sort +uniq(map { make_shim($_)->supported } @backends);
 }
 
 sub run_workload {
@@ -47,11 +48,9 @@ sub run_workload {
 	}
 	say $task;
 	for my $backend (@backends) {
-		my $shim = $shim_for_backend{$backend}
-			// die "No shim for $backend\n";
+		my $shim = make_shim($backend, timeout => $timeout);
 		next unless $shim->supports($task);
-		$shim->timeout($timeout);
-		print $shim->backend, ", ";
+		print "$backend, ";
 		$result += $shim->print_benchmark($task, $max_rank_exponent);
 	}
 	say "";
@@ -74,6 +73,10 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
   # The names of all underlying priority-queue modules tested
   my @backends = all_backends();
+
+  # Create a shim for the named backend; additional arguments
+  # are passed directly to the underlying constructor
+  my $shim = make_shim('List::Priority');
 
   # Run only the workload you care about
   run_workload('random_insert', 6, "List::Priority", "Hash::PriorityQueue");

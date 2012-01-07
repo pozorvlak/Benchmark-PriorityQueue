@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Benchmark qw<cmpthese>;
-use Benchmark::PriorityQueue qw<all_backends all_tasks>;
+use Benchmark::PriorityQueue qw<all_backends all_tasks make_shim>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
 my $USAGE = <<'EOF';
@@ -64,7 +64,7 @@ my %abbr;
 for my $task (@{ $opt{t} }) {
     my @shims =
         grep { $_->supports($task) }
-        map  { "Benchmark::PriorityQueue::$_"->new(iterations => $opt{i}) }
+        map  { make_shim($_, iterations => $opt{i}) }
         @{ $opt{b} };
     for my $rank (@{ $opt{r} }) {
         local $| = 1;
