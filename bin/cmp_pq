@@ -17,20 +17,20 @@ Options:
     Number of iterations to run in each timing test; default 10; negative
     means number of seconds to iterate
 
-  -n NUM
-    Use NUM as the "rank" for each workload; multiple allowed; 1000 if
+  -r RANK
+    Integer indicating the size of each workload; multiple allowed; 1000 if
     none specified
 
-  -m BACKEND
+  -b BACKEND
     Backend module to benchmark, like List::Priority; multiple allowed; all
     if none specified
 
-  -b TASK
+  -t TASK
     Task to run; multiple allowed; all if none specified
 
 EOF
 
-GetOptions(\my %opt, qw<i=i n=i@ m=s@ b=s@ help|?>)
+GetOptions(\my %opt, qw<i=i r=i@ b=s@ t=s@ help|?>)
     or die $USAGE;
 
 if ($opt{help}) {
@@ -39,14 +39,14 @@ if ($opt{help}) {
 }
 
 $opt{i} //= 10;
-$opt{n} ||= [1000];
-$opt{m} ||= [all_backends()];
-$opt{b} ||= [all_tasks()];
+$opt{r} ||= [1000];
+$opt{b} ||= [all_backends()];
+$opt{t} ||= [all_tasks()];
 
 my %abbr;
 {
     my %seen;
-    for my $backend (@{ $opt{m} }) {
+    for my $backend (@{ $opt{b} }) {
         (my $abbr = $backend)
             =~ s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ ) //xmsg;
         $abbr =~ s/::/:/g;
@@ -61,12 +61,12 @@ my %abbr;
     }
 }
 
-for my $task (@{ $opt{b} }) {
+for my $task (@{ $opt{t} }) {
     my @shims =
         grep { $_->supports($task) }
         map  { "Benchmark::PriorityQueue::$_"->new(iterations => $opt{i}) }
-        @{ $opt{m} };
-    for my $rank (@{ $opt{n} }) {
+        @{ $opt{b} };
+    for my $rank (@{ $opt{r} }) {
         local $| = 1;
         say '';
         print "Running $task on ", scalar @shims, " backends, rank=$rank ";

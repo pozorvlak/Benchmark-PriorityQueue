@@ -4,14 +4,14 @@ use strict;
 use warnings;
 use 5.10.0;
 use Benchmark::PriorityQueue qw<run_workload all_tasks all_backends>;
-use Getopt::Long;
+use Getopt::Long qw<GetOptions :config gnu_getopt>;
 use DateTime::Duration;
 
 my $default_max_rank_exponent = 3;
-GetOptions("m=s"      => \ my @backends,
-	   "b=s"      => \ my @tasks,
+GetOptions("b=s"      => \ my @backends,
+	   "t=s"      => \ my @tasks,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
-	   "t=i"      => \ my $timeout,
+	   "T=i"      => \ my $timeout,
 	   "help|?|h" => \ my $help)
 	or usage(2);
 
@@ -32,19 +32,19 @@ sub usage {
 	select STDERR if $status != 0;
 	say <<END;
 Usage:
-    $0  -n [exp] -t [timeout] -m [backend 1] -m [backend 2] -b [task 1] ...
+    $0  -n [exp] -T [timeout] -b [backend 1] -b [backend 2] -t [task 1] ...
 
 Options:
-    -m  Backend to benchmark, eg List::Priority. If no -m options are given, all
+    -b  Backend to benchmark, eg List::Priority. If no -m options are given, all
         priority queue backends are benchmarked.
 
-    -b  Task to run. If no -b options are given, all tasks are run.
+    -t  Task to run. If no -b options are given, all tasks are run.
 
     -n  Maximum rank exponent to use. For example, if -n 3 is used,
         data-structures of at most 1000 elements (= 10^3) are used for
         benchmarking.  Defaults to $default_max_rank_exponent.
 
-    -t  Timeout in seconds. If this time is exceeded for a given
+    -T  Timeout in seconds. If this time is exceeded for a given
 	task/backend pair, we give up and move on to the next one.
 END
 	print_tasks();
