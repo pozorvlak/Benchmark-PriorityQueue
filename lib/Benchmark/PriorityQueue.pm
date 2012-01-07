@@ -4,7 +4,7 @@ use 5.010000;
 use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
-use Module::Load;
+use Module::Load qw(load);
 
 use Exporter qw(import);
 our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
