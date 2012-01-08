@@ -54,18 +54,20 @@ sub run_workloads {
 	$args{backends} ||= [all_backends()];
 	$args{ranks}    ||= [1000];
 	$args{progress} ||= sub {};
+	$args{gather}   ||= sub {};
 
 	my @shims = map { make_shim($_) } @{ $args{backends} };
 
 	my @ret;
 	for my $task (@{ $args{tasks} }) {
+		my @gathered;
 		for my $shim (@shims) {
 			next if !$shim->supports($task);
 			with_timeout($args{timeout}, sub {
 				for my $rank (@{ $args{ranks} }) {
 					$args{progress}->($task, $shim->backend, $rank);
 					my $results = $shim->time_workload($task, $rank);
-					push @ret, Benchmark::PriorityQueue::Result->new(
+					push @gathered, Benchmark::PriorityQueue::Result->new(
 						task    => $task,
 						backend => $shim->backend,
 						rank    => $rank,
@@ -74,6 +76,8 @@ sub run_workloads {
 				}
 			});
 		}
+		$args{gather}->($task, @gathered);
+		push @ret, @gathered;
 	}
 
 	return @ret;
@@ -151,6 +155,13 @@ backends if the value is false (but not if you supply an empty array ref).
 
 An array ref of rank values to use; defaults to a singleton array containing
 1000 if the value is false (but not if you supply an empty array ref).
+
+=item C<gather>
+
+An optional code ref to be invoked with all the results for a given task.
+Its first argument will be the task name; subsequent arguments (if any) will
+be all the L<Benchmark::PriorityQueue::Result> objects that were gathered
+for that task.
 
 =item C<progress>
 

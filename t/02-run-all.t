@@ -34,23 +34,30 @@ my @tasks = all_tasks();
 }
 
 {
-    my @progress;
+    my (@progress, @gathered);
     run_workloads(
         tasks    => [qw<random_insert random_insert_mod3>],
         backends => [qw<List::Priority List::PriorityQueue>],
         ranks    => [1, 2],
         progress => sub { push @progress, [@_] },
+        gather   => sub {
+            my ($task, @results) = @_;
+            push @gathered, map { [$task, $_->backend, $_->rank] } @results;
+        }
     );
-    is_deeply(\@progress,
-              [[random_insert      => 'List::Priority',      1],
-               [random_insert      => 'List::Priority',      2],
-               [random_insert      => 'List::PriorityQueue', 1],
-               [random_insert      => 'List::PriorityQueue', 2],
-               [random_insert_mod3 => 'List::Priority',      1],
-               [random_insert_mod3 => 'List::Priority',      2],
-               [random_insert_mod3 => 'List::PriorityQueue', 1],
-               [random_insert_mod3 => 'List::PriorityQueue', 2]],
-              "run_workloads() progress is as expected");
+
+    my @expected = (
+        [random_insert      => 'List::Priority',      1],
+        [random_insert      => 'List::Priority',      2],
+        [random_insert      => 'List::PriorityQueue', 1],
+        [random_insert      => 'List::PriorityQueue', 2],
+        [random_insert_mod3 => 'List::Priority',      1],
+        [random_insert_mod3 => 'List::Priority',      2],
+        [random_insert_mod3 => 'List::PriorityQueue', 1],
+        [random_insert_mod3 => 'List::PriorityQueue', 2],
+    );
+    is_deeply(\@progress, \@expected, "run_workloads() progress is as expected");
+    is_deeply(\@gathered, \@expected, "run_workloads() gathered is as expected");
 }
 
 done_testing();
