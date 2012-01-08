@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use 5.10.0;
+use IO::File;
 use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
@@ -11,6 +12,7 @@ GetOptions("b=s"      => \ my @backends,
 	   "t=s"      => \ my @tasks,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
 	   "T=i"      => \ my $timeout,
+	   "o=s"      => \ my $out_file,
 	   "help|?|h" => \ my $help)
 	or usage(2);
 
@@ -19,6 +21,11 @@ if ($help) {
 }
 
 usage(2) if @ARGV;
+
+my $out_fh = \*STDOUT;
+$out_fh = IO::File->new($out_file, 'w')
+	or die "Can't open $out_file for writing: $!\n"
+		if defined $out_file;
 
 {
 	my @results = run_workloads(
@@ -30,12 +37,15 @@ usage(2) if @ARGV;
 
 	# XXX: probably better to use a real CSV-generating module
 	local $\ = "\x0D\x0A";      # CSV uses CRLF
-	print join ',', qw<Task Backend Version Rank Iterations Seconds>;
+	print $out_fh join ',', qw<Task Backend Version Rank Iterations Seconds>;
 	for my $result (@results) {
-		print join ',', map { $result->$_ }
+		print $out_fh join ',', map { $result->$_ }
 			qw<task backend backend_version rank iterations seconds>;
 	}
 }
+
+close $out_fh
+	or die "Can't close output: $!\n";
 
 sub usage {
 	my ($status) = @_;
@@ -56,6 +66,10 @@ Options:
 
     -T  Timeout in seconds. If this time is exceeded for a given
 	task/backend pair, we give up and move on to the next one.
+
+    -o FILE
+        Write output to FILE; default: standard output
+
 END
 	print_tasks();
 	say "";
