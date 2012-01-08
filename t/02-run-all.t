@@ -33,4 +33,24 @@ my @tasks = all_tasks();
        'run_workloads() does nothing when no backends');
 }
 
+{
+    my @progress;
+    run_workloads(
+        tasks    => [qw<random_insert random_insert_mod3>],
+        backends => [qw<List::Priority List::PriorityQueue>],
+        ranks    => [1, 2],
+        progress => sub { push @progress, [@_] },
+    );
+    is_deeply(\@progress,
+              [[random_insert      => 'List::Priority',      1],
+               [random_insert      => 'List::Priority',      2],
+               [random_insert      => 'List::PriorityQueue', 1],
+               [random_insert      => 'List::PriorityQueue', 2],
+               [random_insert_mod3 => 'List::Priority',      1],
+               [random_insert_mod3 => 'List::Priority',      2],
+               [random_insert_mod3 => 'List::PriorityQueue', 1],
+               [random_insert_mod3 => 'List::PriorityQueue', 2]],
+              "run_workloads() progress is as expected");
+}
+
 done_testing();

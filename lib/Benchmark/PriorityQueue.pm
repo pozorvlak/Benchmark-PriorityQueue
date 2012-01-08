@@ -53,6 +53,7 @@ sub run_workloads {
 	$args{tasks}    ||= [all_tasks()];
 	$args{backends} ||= [all_backends()];
 	$args{ranks}    ||= [1000];
+	$args{progress} ||= sub {};
 
 	my @shims = map { make_shim($_) } @{ $args{backends} };
 
@@ -62,6 +63,7 @@ sub run_workloads {
 			next if !$shim->supports($task);
 			with_timeout($args{timeout}, sub {
 				for my $rank (@{ $args{ranks} }) {
+					$args{progress}->($task, $shim->backend, $rank);
 					my $results = $shim->time_workload($task, $rank);
 					push @ret, Benchmark::PriorityQueue::Result->new(
 						task    => $task,
@@ -149,6 +151,12 @@ backends if the value is false (but not if you supply an empty array ref).
 
 An array ref of rank values to use; defaults to a singleton array containing
 1000 if the value is false (but not if you supply an empty array ref).
+
+=item C<progress>
+
+An optional code ref to be invoked immediately before running a single
+workload.  It will receive three arguments: the task name, the backend name,
+and the rank.
 
 =item C<timeout>
 
