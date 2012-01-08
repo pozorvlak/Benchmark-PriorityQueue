@@ -74,10 +74,6 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
   # The names of all underlying priority-queue modules tested
   my @backends = all_backends();
 
-  # Create a shim for the named backend; additional arguments
-  # are passed directly to the underlying constructor
-  my $shim = make_shim('List::Priority');
-
   # Run only the workload you care about
   run_workload('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
 
@@ -94,6 +90,53 @@ performance characteristics. This module is intended to help you choose the
 right one for I<your> application.
 
 (*) OK, seven.
+
+=head2 FUNCTIONS
+
+=over 4
+
+=item C<all_backends()>
+
+Returns a list of all known backend module names.
+
+=item C<all_tasks()>
+
+Returns a list of all known task names.
+
+=item C<make_shim($backend, @args)>
+
+Create and return an instance of the shim class for the given C<$backend>.
+Any additional C<@args> are passed directly to the appropriate constructor.
+
+=item C<run_workload($task, $max_rank_exponent, $timeout, @backends)>
+
+Run a series of workloads for a particular task.  Arguments are:
+
+=over 4
+
+=item C<$task>
+
+The name of the task to be run
+
+=item C<$max_rank_exponent>
+
+The task will be run with a series of ranks which are powers of ten; the
+highest rank is C<10 ** $max_rank_exponent>.
+
+=item C<$timeout>
+
+Give up on higher-numbered ranks for a given B<benchmark> if more than
+C<$timeout> seconds have been used on lower-numbered ranks.
+
+=item C<@backends>
+
+The names of backend modules to benchmark.  If none are supplied, all known
+backends are used.  Backends which don't support the given C<$task> are
+silently ignored.
+
+=back
+
+=back
 
 =head2 EXPORT
 
