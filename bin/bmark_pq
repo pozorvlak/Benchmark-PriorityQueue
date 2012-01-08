@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use 5.10.0;
 use IO::File;
+use List::MoreUtils qw<uniq>;
+use Benchmark qw<cmpthese>;
 use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
@@ -34,6 +36,7 @@ $out_fh = IO::File->new($out_file, 'w')
 
 my %format_op = (
 	csv => {
+		gather	 => sub {},
 		start	 => sub { STDERR->autoflush(1) },
 		generate => sub {
 			my @results = @_;
@@ -60,9 +63,43 @@ my %format_op = (
 			($prev_task, $prev_backend) = ($task, $backend);
 		},
 	},
+
+	compare => {
+		generate => sub {},
+		start    => sub {
+			# This restriction seems hard to remove.  Applying
+			# timeouts on a per-benchmark basis means that ranks
+			# are nested within (backends and tasks); but here
+			# we want to nest backends within (ranks and tasks).
+			# Rather than give run_workloads() the ability to
+			# invert its loops, we just forbid the awkward case;
+			# users can apply a shell loop if they want multiple
+			# ranks.
+			die "Only one rank accepted for 'compare' output format\n"
+				if @ranks > 1;
+
+			$out_fh->autoflush(1) if !defined $out_file;
+			select $out_fh; # for cmpthese()
+		},
+		progress => sub {
+			my ($task, $backend, $rank) = @_;
+			state $prev_task    = '';
+			state $prev_backend = '';
+			print "\nRunning $task, rank=$rank "
+				if $task ne $prev_task;
+			print '.';
+			($prev_task, $prev_backend) = ($task, $backend);
+		},
+		gather => sub {
+			my ($task, @results) = @_;
+			print "\n";
+			cmpthese({ map { $_->backend => $_->results } @results })
+			    if @results;
+		},
+	},
 );
 
-my ($format) = keys %format_op; # temporarily
+my ($format) = reverse sort keys %format_op; # temporarily
 
 {
 	$format_op{$format}{start}->();
@@ -72,6 +109,7 @@ my ($format) = keys %format_op; # temporarily
 		ranks    => \@ranks,
 		timeout  => $timeout,
 		progress => $format_op{$format}{progress},
+		gather   => $format_op{$format}{gather},
 	);
 	$format_op{$format}{generate}->(@results);
 }
