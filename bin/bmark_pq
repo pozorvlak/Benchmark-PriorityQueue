@@ -16,6 +16,7 @@ GetOptions("b=s"      => \ my @backends,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
 	   "T=i"      => \ my $timeout,
 	   "o=s"      => \ my $out_file,
+	   "f=s"      => \ my $format,
 	   "v"        => \ my $verbose,
 	   "help|?|h" => \ my $help)
 	or usage(2);
@@ -99,7 +100,8 @@ my %format_op = (
 	},
 );
 
-my ($format) = reverse sort keys %format_op; # temporarily
+$format //= defined $out_file ? 'csv' : 'compare';
+die "Unknown output format '$format'" if !$format_op{$format};
 
 {
 	$format_op{$format}{start}->();
@@ -143,6 +145,11 @@ Options:
 
     -o FILE
         Write output to FILE; default: standard output
+
+    -f FORMAT
+        Use the given output FORMAT, either "compare" or "csv". The default
+        is "csv" with a -o option, or "compare" otherwise.  Currently,
+        "compare" restricts you to use of a single rank.
 
     -v  Emit progress messages to standard error
 
