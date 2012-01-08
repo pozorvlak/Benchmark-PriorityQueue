@@ -6,6 +6,7 @@ use warnings;
 use Benchmark::PriorityQueue::Result;
 use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
+use Sys::SigAction qw(timeout_call);
 
 use Exporter qw(import);
 our @EXPORT_OK = qw(run_workloads all_tasks all_backends make_shim);
@@ -40,13 +41,18 @@ sub all_tasks {
 	return sort +uniq(map { make_shim($_)->supported } @backends);
 }
 
+sub with_timeout {
+	my ($timeout, $body) = @_;
+	return $body->() if !defined $timeout;
+	timeout_call($timeout, $body);
+}
+
 sub run_workloads {
 	my (%args) = @_;
 
 	$args{tasks}    ||= [all_tasks()];
 	$args{backends} ||= [all_backends()];
 	$args{ranks}    ||= [1000];
-	$args{timeout}  //= 0+'Inf';
 
 	my @shims = map { make_shim($_) } @{ $args{backends} };
 
@@ -54,18 +60,17 @@ sub run_workloads {
 	for my $task (@{ $args{tasks} }) {
 		for my $shim (@shims) {
 			next if !$shim->supports($task);
-			my $max_time = time + $args{timeout};
-			for my $rank (@{ $args{ranks} }) {
-				my $results = $shim->time_workload($task, $rank);
-				my $now = time;
-				push @ret, Benchmark::PriorityQueue::Result->new(
-					task    => $task,
-					backend => $shim->backend,
-					rank    => $rank,
-					results => $results,
-				);
-				last if $now > $max_time;
-			}
+			with_timeout($args{timeout}, sub {
+				for my $rank (@{ $args{ranks} }) {
+					my $results = $shim->time_workload($task, $rank);
+					push @ret, Benchmark::PriorityQueue::Result->new(
+						task    => $task,
+						backend => $shim->backend,
+						rank    => $rank,
+						results => $results,
+					);
+				}
+			});
 		}
 	}
 
@@ -147,13 +152,12 @@ An array ref of rank values to use; defaults to a singleton array containing
 
 =item C<timeout>
 
-Integer number of seconds after which a given B<benchmark> is stopped early.
-If missing or undefined, there is no time limit.
+Maximum number of seconds to run a given B<benchmark> on; if missing or
+undefined, there is no time limit.  If the timeout is exceeded,
+C<run_workloads()> silently gives up and attempts the next B<benchmark>.
 
-XXX: in the current version, the maximum execution time can be substantially
-larger than C<$timeout>.  In particular, if the execution time required
-depends linearly on the rank, then the time allocated to a given benchmark
-is bounded by C<11 * $timeout>.  This bug is expected to be fixed soon.
+Note that if the first rank for a given benchmark takes longer than the
+timeout, you won't get any results for that benchmark.
 
 =back
 

@@ -11,6 +11,7 @@ WriteMakefile(
 	'Test::More' => 0.88,
 	'List::Util' => 0,
 	'List::MoreUtils' => 0,
+	'Sys::SigAction' => 0.12, # for timeout_call
 	'Heap::Priority' => 0.01,
 	'List::Priority' => 0.03,
 	'List::PriorityQueue' => 0.01,
