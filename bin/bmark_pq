@@ -10,10 +10,12 @@ use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
 my $default_max_rank_exponent = 3;
+my $default_iterations = 10;
 GetOptions("b=s"      => \ my @backends,
 	   "t=s"      => \ my @tasks,
 	   "r=i"      => \ my @ranks,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
+	   "i=i"      => \(my $iterations = $default_iterations),
 	   "T=i"      => \ my $timeout,
 	   "o=s"      => \ my $out_file,
 	   "f=s"      => \ my $format,
@@ -106,12 +108,13 @@ die "Unknown output format '$format'" if !$format_op{$format};
 {
 	$format_op{$format}{start}->();
 	my @results = run_workloads(
-		tasks    => @tasks    && \@tasks,
-		backends => @backends && \@backends,
-		ranks    => \@ranks,
-		timeout  => $timeout,
-		progress => $format_op{$format}{progress},
-		gather   => $format_op{$format}{gather},
+		tasks      => @tasks    && \@tasks,
+		backends   => @backends && \@backends,
+		ranks      => \@ranks,
+		timeout    => $timeout,
+		iterations => $iterations,
+		progress   => $format_op{$format}{progress},
+		gather     => $format_op{$format}{gather},
 	);
 	$format_op{$format}{generate}->(@results);
 }
@@ -139,6 +142,11 @@ Options:
     -n  Maximum rank exponent to use. For example, if -n 3 is used,
         data-structures of at most 1000 elements (= 10^3) are used for
         benchmarking.  Defaults to $default_max_rank_exponent.
+
+    -i ITERATIONS
+        The number of iterations to run for each workload; default: 10.  If
+        negative, its absolute value indicates the minimum number of seconds
+        each workload should be run for.
 
     -T  Timeout in seconds. If this time is exceeded for a given
 	task/backend pair, we give up and move on to the next one.
