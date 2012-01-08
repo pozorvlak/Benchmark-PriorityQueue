@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.10.0;
 use IO::File;
-use List::MoreUtils qw<uniq>;
+use List::MoreUtils qw<uniq apply>;
 use Benchmark qw<cmpthese>;
 use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
@@ -36,6 +36,8 @@ my $out_fh = \*STDOUT;
 $out_fh = IO::File->new($out_file, 'w')
 	or die "Can't open $out_file for writing: $!\n"
 		if defined $out_file;
+
+my %backend_abbr;
 
 my %format_op = (
 	csv => {
@@ -83,6 +85,8 @@ my %format_op = (
 
 			$out_fh->autoflush(1) if !defined $out_file;
 			select $out_fh; # for cmpthese()
+
+			abbreviate_backends();
 		},
 		progress => sub {
 			my ($task, $backend, $rank) = @_;
@@ -96,7 +100,7 @@ my %format_op = (
 		gather => sub {
 			my ($task, @results) = @_;
 			print "\n";
-			cmpthese({ map { $_->backend => $_->results } @results })
+			cmpthese({ map { $backend_abbr{$_->backend} => $_->results } @results })
 			    if @results;
 		},
 	},
@@ -177,4 +181,23 @@ sub print_tasks {
 sub print_backends {
 	say "Available backends to benchmark:";
 	print(map { "   $_\n" } all_backends());
+}
+
+sub abbreviate_backends {
+
+	my %seen;
+	for my $backend (@backends ? @backends : all_backends()) {
+		my $abbr = apply {
+			s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ )//xmsg;
+			s/::/:/g;
+		} $backend;
+		my $disambiguated = $abbr;
+		for (my $n = 1; ; $disambiguated = sprintf '%s-%d', $abbr, ++$n) {
+			if (!$seen{$disambiguated}++) {
+				say "$disambiguated = $backend";
+				$backend_abbr{$backend} = $disambiguated;
+				last;
+			}
+		}
+	}
 }
