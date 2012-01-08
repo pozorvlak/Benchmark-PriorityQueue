@@ -10,6 +10,7 @@ use Getopt::Long qw<GetOptions :config gnu_getopt>;
 my $default_max_rank_exponent = 3;
 GetOptions("b=s"      => \ my @backends,
 	   "t=s"      => \ my @tasks,
+	   "r=i"      => \ my @ranks,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
 	   "T=i"      => \ my $timeout,
 	   "o=s"      => \ my $out_file,
@@ -23,6 +24,9 @@ if ($help) {
 
 usage(2) if @ARGV;
 
+@ranks = map { 10**$_ } 1 .. $max_rank_exponent
+	if !@ranks;
+
 my $out_fh = \*STDOUT;
 $out_fh = IO::File->new($out_file, 'w')
 	or die "Can't open $out_file for writing: $!\n"
@@ -34,7 +38,7 @@ STDERR->autoflush(1);
 	my @results = run_workloads(
 		tasks    => @tasks    && \@tasks,
 		backends => @backends && \@backends,
-		ranks    => [map { 10**$_ } 1 .. $max_rank_exponent],
+		ranks    => \@ranks,
 		timeout  => $timeout,
 		progress => $verbose && sub {
 			my ($task, $backend, $rank) = @_;
@@ -72,6 +76,10 @@ Options:
         priority queue backends are benchmarked.
 
     -t  Task to run. If no -b options are given, all tasks are run.
+
+    -r RANK
+        Rank values to run for each benchmark. If no -r options are given,
+        we use 10, 100, 1000, ... up to the limit given by the -n option
 
     -n  Maximum rank exponent to use. For example, if -n 3 is used,
         data-structures of at most 1000 elements (= 10^3) are used for
