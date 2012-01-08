@@ -32,16 +32,26 @@ $out_fh = IO::File->new($out_file, 'w')
 	or die "Can't open $out_file for writing: $!\n"
 		if defined $out_file;
 
-STDERR->autoflush(1);
+my %format_op = (
+	csv => {
+		start	 => sub { STDERR->autoflush(1) },
+		generate => sub {
+			my @results = @_;
 
-{
-	my @results = run_workloads(
-		tasks    => @tasks    && \@tasks,
-		backends => @backends && \@backends,
-		ranks    => \@ranks,
-		timeout  => $timeout,
-		progress => $verbose && sub {
+			print STDERR "\n" if $verbose;
+
+			# XXX: probably better to use a real CSV-generating module
+			local $\ = "\x0D\x0A";      # CSV uses CRLF
+			print $out_fh join ',',
+				qw<Task Backend Version Rank Iterations Seconds>;
+			for my $result (@results) {
+				print $out_fh join ',', map { $result->$_ }
+					qw<task backend backend_version rank iterations seconds>;
+			}
+		},
+		progress => sub {
 			my ($task, $backend, $rank) = @_;
+			return if !$verbose;
 			state $prev_task    = '';
 			state $prev_backend = '';
 			print STDERR "\nRunning $task on $backend "
@@ -49,16 +59,21 @@ STDERR->autoflush(1);
 			print STDERR '.';
 			($prev_task, $prev_backend) = ($task, $backend);
 		},
-	);
-	print STDERR "\n" if $verbose;
+	},
+);
 
-	# XXX: probably better to use a real CSV-generating module
-	local $\ = "\x0D\x0A";      # CSV uses CRLF
-	print $out_fh join ',', qw<Task Backend Version Rank Iterations Seconds>;
-	for my $result (@results) {
-		print $out_fh join ',', map { $result->$_ }
-			qw<task backend backend_version rank iterations seconds>;
-	}
+my ($format) = keys %format_op; # temporarily
+
+{
+	$format_op{$format}{start}->();
+	my @results = run_workloads(
+		tasks    => @tasks    && \@tasks,
+		backends => @backends && \@backends,
+		ranks    => \@ranks,
+		timeout  => $timeout,
+		progress => $format_op{$format}{progress},
+	);
+	$format_op{$format}{generate}->(@results);
 }
 
 close $out_fh
