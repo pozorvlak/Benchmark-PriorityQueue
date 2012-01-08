@@ -9,7 +9,7 @@ use Module::Load qw(load);
 use Sys::SigAction qw(timeout_call);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_workloads all_tasks all_backends make_shim);
+our @EXPORT_OK = qw(run_workloads all_tasks all_backends);
 
 our $VERSION = '0.01';
 
@@ -128,11 +128,6 @@ Returns a list of all known backend module names.
 =item C<all_tasks()>
 
 Returns a list of all known task names.
-
-=item C<make_shim($backend, @args)>
-
-Create and return an instance of the shim class for the given C<$backend>.
-Any additional C<@args> are passed directly to the appropriate constructor.
 
 =item C<run_workloads(%args)>
 
