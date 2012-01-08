@@ -3,9 +3,8 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue qw<run_workload all_tasks all_backends>;
+use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
 use Getopt::Long qw<GetOptions :config gnu_getopt>;
-use DateTime::Duration;
 
 my $default_max_rank_exponent = 3;
 GetOptions("b=s"      => \ my @backends,
@@ -21,11 +20,22 @@ if ($help) {
 
 usage(2) if @ARGV;
 
-$timeout = DateTime::Duration->new(seconds => $timeout // 0);
-@tasks = all_tasks() if !@tasks;
+{
+	my @results = run_workloads(
+		tasks    => @tasks    && \@tasks,
+		backends => @backends && \@backends,
+		ranks    => [map { 10**$_ } 1 .. $max_rank_exponent],
+		timeout  => $timeout,
+	);
 
-run_workload($_, $max_rank_exponent, $timeout, @backends)
-	for @tasks;
+	# XXX: probably better to use a real CSV-generating module
+	local $\ = "\x0D\x0A";      # CSV uses CRLF
+	print join ',', qw<Task Backend Version Rank Iterations Seconds>;
+	for my $result (@results) {
+		print join ',', map { $result->$_ }
+			qw<task backend backend_version rank iterations seconds>;
+	}
+}
 
 sub usage {
 	my ($status) = @_;
