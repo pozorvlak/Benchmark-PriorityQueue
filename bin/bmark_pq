@@ -13,6 +13,7 @@ GetOptions("b=s"      => \ my @backends,
 	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
 	   "T=i"      => \ my $timeout,
 	   "o=s"      => \ my $out_file,
+	   "v"        => \ my $verbose,
 	   "help|?|h" => \ my $help)
 	or usage(2);
 
@@ -27,13 +28,25 @@ $out_fh = IO::File->new($out_file, 'w')
 	or die "Can't open $out_file for writing: $!\n"
 		if defined $out_file;
 
+STDERR->autoflush(1);
+
 {
 	my @results = run_workloads(
 		tasks    => @tasks    && \@tasks,
 		backends => @backends && \@backends,
 		ranks    => [map { 10**$_ } 1 .. $max_rank_exponent],
 		timeout  => $timeout,
+		progress => $verbose && sub {
+			my ($task, $backend, $rank) = @_;
+			state $prev_task    = '';
+			state $prev_backend = '';
+			print STDERR "\nRunning $task on $backend "
+				if $task ne $prev_task || $backend ne $prev_backend;
+			print STDERR '.';
+			($prev_task, $prev_backend) = ($task, $backend);
+		},
 	);
+	print STDERR "\n" if $verbose;
 
 	# XXX: probably better to use a real CSV-generating module
 	local $\ = "\x0D\x0A";      # CSV uses CRLF
@@ -69,6 +82,8 @@ Options:
 
     -o FILE
         Write output to FILE; default: standard output
+
+    -v  Emit progress messages to standard error
 
 END
 	print_tasks();
