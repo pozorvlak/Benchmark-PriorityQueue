@@ -3,70 +3,201 @@
 use strict;
 use warnings;
 use 5.10.0;
-use Benchmark::PriorityQueue qw'run_all_benchmarks run_benchmark';
-use Getopt::Long;
-use DateTime::Duration;
+use IO::File;
+use List::MoreUtils qw<uniq apply>;
+use Benchmark qw<cmpthese>;
+use Benchmark::PriorityQueue qw<run_workloads all_tasks all_backends>;
+use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
-my $default_n = 3;
-my @modules; my @benchmarks; my $help; my $timeout;
-my $n = $default_n;
-GetOptions ("m=s" => \@modules,
-	    "b=s" => \@benchmarks,
-	    "n=i" => \$n,
-	    "t=i" => \$timeout,
-	    "h"   => \$help);
+my $default_max_rank_exponent = 3;
+my $default_iterations = 10;
+GetOptions("b=s"      => \ my @backends,
+	   "t=s"      => \ my @tasks,
+	   "r=i"      => \ my @ranks,
+	   "n=i"      => \(my $max_rank_exponent = $default_max_rank_exponent),
+	   "i=i"      => \(my $iterations = $default_iterations),
+	   "T=i"      => \ my $timeout,
+	   "o=s"      => \ my $out_file,
+	   "f=s"      => \ my $format,
+	   "v"        => \ my $verbose,
+	   "help|?|h" => \ my $help)
+	or usage(2);
 
 if ($help) {
-	usage();
+	usage(0);
 }
 
-if (defined $timeout) {
-	$timeout = DateTime::Duration->new(seconds => $timeout);
-} else {
-	$timeout = DateTime::Duration->new(seconds => 0);
+usage(2) if @ARGV;
+
+@ranks = map { 10**$_ } 1 .. $max_rank_exponent
+	if !@ranks;
+
+my $out_fh = \*STDOUT;
+$out_fh = IO::File->new($out_file, 'w')
+	or die "Can't open $out_file for writing: $!\n"
+		if defined $out_file;
+
+my %backend_abbr;
+
+my %format_op = (
+	csv => {
+		gather	 => sub {},
+		start	 => sub { STDERR->autoflush(1) },
+		generate => sub {
+			my @results = @_;
+
+			print STDERR "\n" if $verbose;
+
+			# XXX: probably better to use a real CSV-generating module
+			local $\ = "\x0D\x0A";      # CSV uses CRLF
+			print $out_fh join ',',
+				qw<Task Backend Version Rank Iterations Seconds>;
+			for my $result (@results) {
+				print $out_fh join ',', map { $result->$_ }
+					qw<task backend backend_version rank iterations seconds>;
+			}
+		},
+		progress => sub {
+			my ($task, $backend, $rank) = @_;
+			return if !$verbose;
+			state $prev_task    = '';
+			state $prev_backend = '';
+			print STDERR "\nRunning $task on $backend "
+				if $task ne $prev_task || $backend ne $prev_backend;
+			print STDERR '.';
+			($prev_task, $prev_backend) = ($task, $backend);
+		},
+	},
+
+	compare => {
+		generate => sub {},
+		start    => sub {
+			# This restriction seems hard to remove.  Applying
+			# timeouts on a per-benchmark basis means that ranks
+			# are nested within (backends and tasks); but here
+			# we want to nest backends within (ranks and tasks).
+			# Rather than give run_workloads() the ability to
+			# invert its loops, we just forbid the awkward case;
+			# users can apply a shell loop if they want multiple
+			# ranks.
+			die "Only one rank accepted for 'compare' output format\n"
+				if @ranks > 1;
+
+			$out_fh->autoflush(1) if !defined $out_file;
+			select $out_fh; # for cmpthese()
+
+			abbreviate_backends();
+		},
+		progress => sub {
+			my ($task, $backend, $rank) = @_;
+			state $prev_task    = '';
+			state $prev_backend = '';
+			print "\nRunning $task, rank=$rank "
+				if $task ne $prev_task;
+			print '.';
+			($prev_task, $prev_backend) = ($task, $backend);
+		},
+		gather => sub {
+			my ($task, @results) = @_;
+			print "\n";
+			cmpthese({ map { $backend_abbr{$_->backend} => $_->results } @results })
+			    if @results;
+		},
+	},
+);
+
+$format //= defined $out_file ? 'csv' : 'compare';
+die "Unknown output format '$format'" if !$format_op{$format};
+
+{
+	$format_op{$format}{start}->();
+	my @results = run_workloads(
+		tasks      => @tasks    && \@tasks,
+		backends   => @backends && \@backends,
+		ranks      => \@ranks,
+		timeout    => $timeout,
+		iterations => $iterations,
+		progress   => $format_op{$format}{progress},
+		gather     => $format_op{$format}{gather},
+	);
+	$format_op{$format}{generate}->(@results);
 }
 
-if (@benchmarks == 0) {
-	run_all_benchmarks($n, $timeout, @modules);
-} else {
-	for my $bmark (@benchmarks) {
-		run_benchmark($bmark, $n, $timeout, @modules);
-	}
-}
+close $out_fh
+	or die "Can't close output: $!\n";
 
 sub usage {
+	my ($status) = @_;
+	select STDERR if $status != 0;
 	say <<END;
 Usage:
-    $0  -n [exp] -t [timeout] -m [module 1] -m [module 2] -b [benchmark 1] ...
+    $0  -n [exp] -T [timeout] -b [backend 1] -b [backend 2] -t [task 1] ...
 
-Options: 
-    -m  Module to benchmark, eg List::Priority. If no -m options are given, all
-        priority queue modules are benchmarked.
+Options:
+    -b  Backend to benchmark, eg List::Priority. If no -m options are given, all
+        priority queue backends are benchmarked.
 
-    -b  Benchmark to run. If no -b options are given, all benchmarks are run.
+    -t  Task to run. If no -b options are given, all tasks are run.
 
-    -n  Maximum exponent to use. For example, if -n 3 is used, data-structures
-        of at most 1000 elements (= 10^3) are used for benchmarking.
-	Defaults to $default_n.
+    -r RANK
+        Rank values to run for each benchmark. If no -r options are given,
+        we use 10, 100, 1000, ... up to the limit given by the -n option
 
-    -t  Timeout in seconds. If this time is exceeded for a given
-	benchmark/module pair, we give up and move on to the next one.
+    -n  Maximum rank exponent to use. For example, if -n 3 is used,
+        data-structures of at most 1000 elements (= 10^3) are used for
+        benchmarking.  Defaults to $default_max_rank_exponent.
 
-    -h  Show this help message and exit.
+    -i ITERATIONS
+        The number of iterations to run for each workload; default: 10.  If
+        negative, its absolute value indicates the minimum number of seconds
+        each workload should be run for.
+
+    -T  Timeout in seconds. If this time is exceeded for a given
+	task/backend pair, we give up and move on to the next one.
+
+    -o FILE
+        Write output to FILE; default: standard output
+
+    -f FORMAT
+        Use the given output FORMAT, either "compare" or "csv". The default
+        is "csv" with a -o option, or "compare" otherwise.  Currently,
+        "compare" restricts you to use of a single rank.
+
+    -v  Emit progress messages to standard error
+
 END
-	print_benchmarks();
+	print_tasks();
 	say "";
-	print_modules();
+	print_backends();
 	say "";
-	exit 0;
+	exit $status;
 }
 
-sub print_benchmarks {
-	say "Available benchmarks:";
-	print(map { "   $_\n" } Benchmark::PriorityQueue::all_benchmarks());
+sub print_tasks {
+	say "Available tasks:";
+	print(map { "   $_\n" } all_tasks());
 }
 
-sub print_modules {
-	say "Available modules to benchmark:";
-	print(map { "   $_\n" } Benchmark::PriorityQueue::all_tested_modules());
+sub print_backends {
+	say "Available backends to benchmark:";
+	print(map { "   $_\n" } all_backends());
+}
+
+sub abbreviate_backends {
+
+	my %seen;
+	for my $backend (@backends ? @backends : all_backends()) {
+		my $abbr = apply {
+			s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ )//xmsg;
+			s/::/:/g;
+		} $backend;
+		my $disambiguated = $abbr;
+		for (my $n = 1; ; $disambiguated = sprintf '%s-%d', $abbr, ++$n) {
+			if (!$seen{$disambiguated}++) {
+				say "$disambiguated = $backend";
+				$backend_abbr{$backend} = $disambiguated;
+				last;
+			}
+		}
+	}
 }

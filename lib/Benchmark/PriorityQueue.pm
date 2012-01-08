@@ -3,15 +3,17 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
+use Benchmark::PriorityQueue::Result;
 use List::MoreUtils qw(uniq);
-use Module::Load;
+use Module::Load qw(load);
+use Sys::SigAction qw(timeout_call);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_all_benchmarks run_benchmark);
+our @EXPORT_OK = qw(run_workloads all_tasks all_backends);
 
 our $VERSION = '0.01';
 
-my @testees = qw(
+my @backends = qw(
 	List::Priority
 	List::PriorityQueue
 	Hash::PriorityQueue
@@ -21,55 +23,65 @@ my @testees = qw(
 	POE::XS::Queue::Array
 );
 
-for my $module (@testees) {
-	load "Benchmark::PriorityQueue::$module";
+for my $backend (@backends) {
+	load "Benchmark::PriorityQueue::$backend";
 }
 
-my @testers = map { "Benchmark::PriorityQueue::$_"->new } @testees;
-
-# Hash of [module name] => tester mappings
-my %testers = map { $_->module_tested() => $_ } @testers;
-
-sub module_is_tested {
-	my ($module) = @_;
-	return defined $testers{$module};
+sub make_shim {
+	my ($backend, @constructor_args) = @_;
+	my $shim_class = "Benchmark::PriorityQueue::$backend";
+	return $shim_class->new(@constructor_args);
 }
 
-sub all_tested_modules {
-	return sort(keys %testers);
+sub all_backends {
+	return sort @backends;
 }
 
-sub all_benchmarks {
-	return sort uniq(map { $_->supported } @testers);
+sub all_tasks {
+	return sort +uniq(map { make_shim($_)->supported } @backends);
 }
 
-sub run_benchmark {
-	my ($bmark, $n, $timeout, @modules_to_test) = @_;
-	my $result;
-	if (@modules_to_test == 0) {
-		# If no modules specified, test them all.
-		@modules_to_test = all_tested_modules;
+sub with_timeout {
+	my ($timeout, $body) = @_;
+	return $body->() if !defined $timeout;
+	timeout_call($timeout, $body);
+}
+
+sub run_workloads {
+	my (%args) = @_;
+
+	$args{tasks}    ||= [all_tasks()];
+	$args{backends} ||= [all_backends()];
+	$args{ranks}    ||= [1000];
+	$args{progress} ||= sub {};
+	$args{gather}   ||= sub {};
+
+	my %init = map { $_ => $args{$_} } grep { $args{$_} } qw<iterations>;
+	my @shims = map { make_shim($_, %init) } @{ $args{backends} };
+
+	my @ret;
+	for my $task (@{ $args{tasks} }) {
+		my @gathered;
+		for my $shim (@shims) {
+			next if !$shim->supports($task);
+			with_timeout($args{timeout}, sub {
+				for my $rank (@{ $args{ranks} }) {
+					$args{progress}->($task, $shim->backend, $rank);
+					my $results = $shim->time_workload($task, $rank);
+					push @gathered, Benchmark::PriorityQueue::Result->new(
+						task    => $task,
+						backend => $shim->backend,
+						rank    => $rank,
+						results => $results,
+					);
+				}
+			});
+		}
+		$args{gather}->($task, @gathered);
+		push @ret, @gathered;
 	}
-	say $bmark;
-	for my $module (@modules_to_test) {
-		my $tester = $testers{$module};
-		$tester->timeout($timeout);
-		die "No tester for $module" unless defined $tester;
-		next unless $tester->supports($bmark);
-		print $tester->module_tested(), ", ";
-		$result = $tester->print_benchmark($bmark, $n);
-	}
-	say "";
-	return $result;
-}
 
-sub run_all_benchmarks {
-	my ($n, $timeout, @modules) = @_;
-	my $bmarks_run = 0;
-	foreach my $bmark (all_benchmarks()) {
-		$bmarks_run += run_benchmark($bmark, $n, $timeout, @modules);
-	}
-	return $bmarks_run;
+	return @ret;
 }
 
 1;
@@ -81,13 +93,19 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
 =head1 SYNOPSIS
 
-  use Benchmark::PriorityQueue qw/run_benchmark run_all_benchmarks/;
+  use Benchmark::PriorityQueue qw/all_tasks all_backends/;
 
-  # Run only the benchmark you care about
-  run_benchmark('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
+  # All task names
+  my @tasks = all_tasks();
 
-  # Benchmark ALL THE FEATURES
-  run_all_benchmarks();
+  # The names of all underlying priority-queue modules tested
+  my @backends = all_backends();
+
+  # Benchmark ALL THE TASKS
+  my @results = run_workloads(
+      ranks   => [map { 10**$_ } 1 .. 6],
+      timeout => $timeout,
+  );
 
 =head1 DESCRIPTION
 
@@ -99,9 +117,123 @@ right one for I<your> application.
 
 (*) OK, seven.
 
+=head2 FUNCTIONS
+
+=over 4
+
+=item C<all_backends()>
+
+Returns a list of all known backend module names.
+
+=item C<all_tasks()>
+
+Returns a list of all known task names.
+
+=item C<run_workloads(%args)>
+
+Run all workloads indicated by the C<%args>, and return a list of
+L<Benchmark::PriorityQueue::Result> objects with the results for each
+workload run.  Elements of C<%args> can be:
+
+=over 4
+
+=item C<tasks>
+
+An array ref of task names to execute; defaults to all known tasks if the
+value is false (but not if you supply an empty array ref).
+
+=item C<backends>
+
+An array ref of backend module names to benchmark; defaults to all known
+backends if the value is false (but not if you supply an empty array ref).
+
+=item C<ranks>
+
+An array ref of rank values to use; defaults to a singleton array containing
+1000 if the value is false (but not if you supply an empty array ref).
+
+=item C<gather>
+
+An optional code ref to be invoked with all the results for a given task.
+Its first argument will be the task name; subsequent arguments (if any) will
+be all the L<Benchmark::PriorityQueue::Result> objects that were gathered
+for that task.
+
+=item C<progress>
+
+An optional code ref to be invoked immediately before running a single
+workload.  It will receive three arguments: the task name, the backend name,
+and the rank.
+
+=item C<timeout>
+
+Maximum number of seconds to run a given B<benchmark> on; if missing or
+undefined, there is no time limit.  If the timeout is exceeded,
+C<run_workloads()> silently gives up and attempts the next B<benchmark>.
+
+Note that if the first rank for a given benchmark takes longer than the
+timeout, you won't get any results for that benchmark.
+
+=item C<iterations>
+
+Integer number of iterations to run for each workload.  Used as a
+constructor argument for the backend's shim class, but omitted from the
+constructor call if none is supplied to C<run_workloads()>; so defaults are
+controlled by the shim classes themselves.
+
+=back
+
+=back
+
 =head2 EXPORT
 
 None by default.
+
+=head2 GLOSSARY
+
+=over 4
+
+=item B<backend>
+
+A CPAN module whose performance is to be investigated.  Examples:
+C<List::Priority>, C<POE::Queue::Array>.
+
+=item B<shim>
+
+A class which performs the C<Benchmark::PriorityQueue::Shim> role, or an
+instance of such a class; shims exist to provide a consistent API over all
+the B<backends> under consideration.  Examples:
+C<Benchmark::PriorityQueue::List::Priority>,
+C<Benchmark::PriorityQueue::POE::Queue::Array>.
+
+=item B<task>
+
+A named sequence of actions which can be executed on some B<shim>.  Note
+that more information than a task's name is needed for actually timing a
+piece of code; see B<workload> and B<benchmark> below.  Examples:
+C<ordered_insert>, C<pop_lowest_random>.
+
+We say that a given B<shim> may B<support> a particular task.
+
+Each task is implemented by a method of the same name in a B<shim> class
+(typically composed from a role like C<Benchmark::PriorityQueue::Shim>).
+
+=item B<benchmark>
+
+A pair of a B<task> and a B<backend>; the backend will B<support> the task.
+For example, (C<random_insert>, C<List::Priority>) is a benchmark for doing
+random insertions (of some B<rank>) using C<List::Priority>.
+
+=item B<workload>
+
+A triple of a B<task>, a B<backend>, and a B<rank> (where the B<rank> is an
+integer whose interpretation depends on the task); alternatively, it can be
+considered a pair of a B<benchmark> and a B<rank>.  A workload is the
+smallest thing that can be executed with no other information.  For example,
+(C<random_insert>, C<List::Priority>, 1e5) will measure how long it takes to
+insert 100,000 random values into a C<List::Priority>.
+
+=back
 
 =head1 SEE ALSO
 
@@ -126,6 +258,5 @@ Copyright (C) 2011 by Miles Gould
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.12.4 or,
 at your option, any later version of Perl 5 you may have available.
-
 
 =cut

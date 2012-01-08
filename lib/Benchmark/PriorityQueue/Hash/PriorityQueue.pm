@@ -1,8 +1,8 @@
 package Benchmark::PriorityQueue::Hash::PriorityQueue;
 use Moose;
 
-extends 'Benchmark::PriorityQueue::Base';
-with 'Benchmark::PriorityQueue::PopsLowest';
+with qw<Benchmark::PriorityQueue::Shim
+        Benchmark::PriorityQueue::PopsLowest>;
 
 use Hash::PriorityQueue;
 
@@ -20,7 +20,7 @@ sub pop_lowest {
 	return $l->pop();
 }
 
-sub module_tested {
+sub backend {
 	return 'Hash::PriorityQueue';
 }
 
