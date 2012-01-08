@@ -3,11 +3,12 @@ package Benchmark::PriorityQueue;
 use 5.010000;
 use strict;
 use warnings;
+use Benchmark::PriorityQueue::Result;
 use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_workload all_tasks all_backends make_shim);
+our @EXPORT_OK = qw(run_workload run_workloads all_tasks all_backends make_shim);
 
 our $VERSION = '0.01';
 
@@ -57,6 +58,38 @@ sub run_workload {
 	return $result;
 }
 
+sub run_workloads {
+	my (%args) = @_;
+
+	$args{tasks}    ||= [all_tasks()];
+	$args{backends} ||= [all_backends()];
+	$args{ranks}    ||= [1000];
+	$args{timeout}  //= 0+'Inf';
+
+	my @shims = map { make_shim($_) } @{ $args{backends} };
+
+	my @ret;
+	for my $task (@{ $args{tasks} }) {
+		for my $shim (@shims) {
+			next if !$shim->supports($task);
+			my $max_time = time + $args{timeout};
+			for my $rank (@{ $args{ranks} }) {
+				my $results = $shim->time_workload($task, $rank);
+				my $now = time;
+				push @ret, Benchmark::PriorityQueue::Result->new(
+					task    => $task,
+					backend => $shim->backend,
+					rank    => $rank,
+					results => $results,
+				);
+				last if $now > $max_time;
+			}
+		}
+	}
+
+	return @ret;
+}
+
 1;
 __END__
 
@@ -78,8 +111,10 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
   run_workload('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
 
   # Benchmark ALL THE TASKS
-  run_workload($_, 6, all_backends())
-      for all_tasks();
+  my @results = run_workloads(
+      ranks   => [map { 10**$_ } 1 .. 6],
+      timeout => $timeout,
+  );
 
 =head1 DESCRIPTION
 
@@ -133,6 +168,41 @@ C<$timeout> seconds have been used on lower-numbered ranks.
 The names of backend modules to benchmark.  If none are supplied, all known
 backends are used.  Backends which don't support the given C<$task> are
 silently ignored.
+
+=back
+
+=item C<run_workloads(%args)>
+
+Run all workloads indicated by the C<%args>, and return a list of
+L<Benchmark::PriorityQueue::Result> objects with the results for each
+workload run.  Elements of C<%args> can be:
+
+=over 4
+
+=item C<tasks>
+
+An array ref of task names to execute; defaults to all known tasks if the
+value is false (but not if you supply an empty array ref).
+
+=item C<backends>
+
+An array ref of backend module names to benchmark; defaults to all known
+backends if the value is false (but not if you supply an empty array ref).
+
+=item C<ranks>
+
+An array ref of rank values to use; defaults to a singleton array containing
+1000 if the value is false (but not if you supply an empty array ref).
+
+=item C<timeout>
+
+Integer number of seconds after which a given B<benchmark> is stopped early.
+If missing or undefined, there is no time limit.
+
+XXX: in the current version, the maximum execution time can be substantially
+larger than C<$timeout>.  In particular, if the execution time required
+depends linearly on the rank, then the time allocated to a given benchmark
+is bounded by C<11 * $timeout>.  This bug is expected to be fixed soon.
 
 =back
 
