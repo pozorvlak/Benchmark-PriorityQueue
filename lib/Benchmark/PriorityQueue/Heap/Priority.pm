@@ -1,9 +1,9 @@
 package Benchmark::PriorityQueue::Heap::Priority;
 use Moose;
 
-extends 'Benchmark::PriorityQueue::Base';
-with 'Benchmark::PriorityQueue::PopsHighest';
-with 'Benchmark::PriorityQueue::PopsLowest';
+with qw<Benchmark::PriorityQueue::Shim
+        Benchmark::PriorityQueue::PopsHighest
+        Benchmark::PriorityQueue::PopsLowest>;
 
 use Heap::Priority;
 
@@ -28,7 +28,7 @@ sub pop_lowest {
 	return $l->pop();
 }
 
-sub module_tested {
+sub backend {
 	return 'Heap::Priority';
 }
 

@@ -1,8 +1,8 @@
 package Benchmark::PriorityQueue::POE::Queue::Array;
 use Moose;
 
-extends 'Benchmark::PriorityQueue::Base';
-with 'Benchmark::PriorityQueue::PopsHighest';
+with qw<Benchmark::PriorityQueue::Shim
+        Benchmark::PriorityQueue::PopsHighest>;
 
 use POE::Queue::Array;
 
@@ -20,7 +20,7 @@ sub pop_highest {
 	return $l->dequeue_next();
 }
 
-sub module_tested {
+sub backend {
 	return 'POE::Queue::Array';
 }
 
