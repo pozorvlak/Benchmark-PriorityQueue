@@ -5,11 +5,9 @@ use 5.10.0;
 
 use namespace::autoclean;
 use Benchmark qw/timeit countit/;
-use DateTime;
 
 requires qw<new_queue backend insert>;
 
-has timeout    => (is => 'ro', isa => 'DateTime::Duration');
 has iterations => (is => 'ro', isa => 'Int', default => 10);
 
 sub time_method {
@@ -99,29 +97,6 @@ sub supports {
 	my ($self, $task) = @_;
 	my %tasks = $self->task_code;
 	return exists $tasks{$task};
-}
-
-sub timed_out {
-	my ($self, $start_time) = @_;
-	my $timeout = $self->timeout;
-	if ($timeout->seconds > 0) {
-		return $start_time + $timeout < DateTime->now();
-	}
-	return 0;
-}
-
-sub print_benchmark {
-	local $| = 1;
-	my ($self, $task, $max_rank_exponent) = @_;
-	my $start_time = DateTime->now();
-	for my $rank_exponent (1 .. $max_rank_exponent) {
-		my @time = @{ $self->time_workload($task, 10**$rank_exponent) };
-		print $time[1] + $time[2];
-		last if $self->timed_out($start_time);
-		print ", " if $rank_exponent < $max_rank_exponent;
-	}
-	print "\n";
-	return 1;
 }
 
 sub time_workload {

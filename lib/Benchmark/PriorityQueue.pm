@@ -8,7 +8,7 @@ use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_workload run_workloads all_tasks all_backends make_shim);
+our @EXPORT_OK = qw(run_workloads all_tasks all_backends make_shim);
 
 our $VERSION = '0.01';
 
@@ -38,24 +38,6 @@ sub all_backends {
 
 sub all_tasks {
 	return sort +uniq(map { make_shim($_)->supported } @backends);
-}
-
-sub run_workload {
-	my ($task, $max_rank_exponent, $timeout, @backends) = @_;
-	my $result = 0;
-	if (@backends == 0) {
-		# If no backends specified, test them all.
-		@backends = all_backends();
-	}
-	say $task;
-	for my $backend (@backends) {
-		my $shim = make_shim($backend, timeout => $timeout);
-		next unless $shim->supports($task);
-		print "$backend, ";
-		$result += $shim->print_benchmark($task, $max_rank_exponent);
-	}
-	say "";
-	return $result;
 }
 
 sub run_workloads {
@@ -99,16 +81,13 @@ Benchmark::PriorityQueue - Perl extension for benchmarking priority queues.
 
 =head1 SYNOPSIS
 
-  use Benchmark::PriorityQueue qw/all_tasks all_backends run_workload/;
+  use Benchmark::PriorityQueue qw/all_tasks all_backends/;
 
   # All task names
   my @tasks = all_tasks();
 
   # The names of all underlying priority-queue modules tested
   my @backends = all_backends();
-
-  # Run only the workload you care about
-  run_workload('random_insert', 6, "List::Priority", "Hash::PriorityQueue");
 
   # Benchmark ALL THE TASKS
   my @results = run_workloads(
@@ -142,34 +121,6 @@ Returns a list of all known task names.
 
 Create and return an instance of the shim class for the given C<$backend>.
 Any additional C<@args> are passed directly to the appropriate constructor.
-
-=item C<run_workload($task, $max_rank_exponent, $timeout, @backends)>
-
-Run a series of workloads for a particular task.  Arguments are:
-
-=over 4
-
-=item C<$task>
-
-The name of the task to be run
-
-=item C<$max_rank_exponent>
-
-The task will be run with a series of ranks which are powers of ten; the
-highest rank is C<10 ** $max_rank_exponent>.
-
-=item C<$timeout>
-
-Give up on higher-numbered ranks for a given B<benchmark> if more than
-C<$timeout> seconds have been used on lower-numbered ranks.
-
-=item C<@backends>
-
-The names of backend modules to benchmark.  If none are supplied, all known
-backends are used.  Backends which don't support the given C<$task> are
-silently ignored.
-
-=back
 
 =item C<run_workloads(%args)>
 

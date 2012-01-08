@@ -9,8 +9,6 @@ WriteMakefile(
 	'Moose' => 2.0401,
         'namespace::autoclean' => 0,
 	'Test::More' => 0.88,
-	'DateTime' => 0.70,
-	'DateTime::Duration' => 0.70,
 	'List::Util' => 0,
 	'List::MoreUtils' => 0,
 	'Heap::Priority' => 0.01,

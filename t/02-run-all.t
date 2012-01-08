@@ -1,16 +1,8 @@
 use Test::More;
-use Benchmark::PriorityQueue qw<run_workload run_workloads all_backends all_tasks>;
-use List::Util qw<sum>;
-use DateTime::Duration;
+use Benchmark::PriorityQueue qw<run_workloads all_backends all_tasks>;
 
 my @backends = all_backends();
 my @tasks = all_tasks();
-
-my $timeout = DateTime::Duration->new(seconds => 7);
-my $n_run = sum 0, map { run_workload($_, 1, $timeout) } all_tasks();
-
-cmp_ok($n_run, '>', 0,
-	"run_workload() on everything completed successfully");
 
 {
     my @results = run_workloads(ranks => [2, 2], timeout => 1);
