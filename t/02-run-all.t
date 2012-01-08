@@ -5,7 +5,7 @@ my @backends = all_backends();
 my @tasks = all_tasks();
 
 {
-    my @results = run_workloads(ranks => [2, 2], timeout => 2);
+    my @results = run_workloads(ranks => [2, 2], timeout => 2, iterations => 1);
     cmp_ok(scalar @results, '>=', scalar @tasks,
            'run_workloads() runs at least one backend+rank for each task');
     cmp_ok(scalar @results, '<=', @backends * @tasks * 2,
@@ -16,19 +16,19 @@ my @tasks = all_tasks();
 }
 
 {
-    my @results = run_workloads(ranks => [], timeout => 2);
+    my @results = run_workloads(ranks => [], timeout => 2, iterations => 1);
     is(scalar @results, 0,
        'run_workloads() does nothing when no ranks');
 }
 
 {
-    my @results = run_workloads(ranks => [2], tasks => [], timeout => 2);
+    my @results = run_workloads(ranks => [2], tasks => [], timeout => 2, iterations => 1);
     is(scalar @results, 0,
        'run_workloads() does nothing when no tasks');
 }
 
 {
-    my @results = run_workloads(ranks => [2], backends => [], timeout => 2);
+    my @results = run_workloads(ranks => [2], backends => [], timeout => 2, iterations => 1);
     is(scalar @results, 0,
        'run_workloads() does nothing when no backends');
 }

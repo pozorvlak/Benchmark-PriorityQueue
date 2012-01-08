@@ -56,7 +56,8 @@ sub run_workloads {
 	$args{progress} ||= sub {};
 	$args{gather}   ||= sub {};
 
-	my @shims = map { make_shim($_) } @{ $args{backends} };
+	my %init = map { $_ => $args{$_} } grep { $args{$_} } qw<iterations>;
+	my @shims = map { make_shim($_, %init) } @{ $args{backends} };
 
 	my @ret;
 	for my $task (@{ $args{tasks} }) {
@@ -177,6 +178,13 @@ C<run_workloads()> silently gives up and attempts the next B<benchmark>.
 
 Note that if the first rank for a given benchmark takes longer than the
 timeout, you won't get any results for that benchmark.
+
+=item C<iterations>
+
+Integer number of iterations to run for each workload.  Used as a
+constructor argument for the backend's shim class, but omitted from the
+constructor call if none is supplied to C<run_workloads()>; so defaults are
+controlled by the shim classes themselves.
 
 =back
 
