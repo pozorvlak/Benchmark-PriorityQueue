@@ -247,8 +247,9 @@ The version control repository for this distribution may be found at
 L<http://github.com/pozorvlak/Benchmark-PriorityQueue>. The best way to
 contribute to this module is with the standard GitHub pull request system.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
+Aaron Crane, E<lt>arc@cpan.orgE<gt>
 Miles Gould, E<lt>miles@assyrian.org.ukE<gt>
 
 =head1 COPYRIGHT AND LICENSE
