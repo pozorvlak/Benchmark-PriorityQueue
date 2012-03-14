@@ -11,6 +11,9 @@ use Getopt::Long qw<GetOptions :config gnu_getopt>;
 
 my $default_max_rank_exponent = 3;
 my $default_iterations = 10;
+
+usage(2) unless @ARGV;
+
 GetOptions("b=s"      => \ my @backends,
 	   "t=s"      => \ my @tasks,
 	   "r=i"      => \ my @ranks,
