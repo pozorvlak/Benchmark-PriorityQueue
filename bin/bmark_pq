@@ -32,9 +32,6 @@ if ($help) {
 
 usage(2) if @ARGV;
 
-@ranks = map { 10**$_ } 1 .. $max_rank_exponent
-	if !@ranks;
-
 my $out_fh = \*STDOUT;
 $out_fh = IO::File->new($out_file, 'w')
 	or die "Can't open $out_file for writing: $!\n"
@@ -111,6 +108,14 @@ my %format_op = (
 
 $format //= defined $out_file ? 'csv' : 'compare';
 die "Unknown output format '$format'" if !$format_op{$format};
+
+if (!@ranks) {
+    if ($format eq 'csv') {
+        @ranks = map { 10**$_ } 1 .. $max_rank_exponent;
+    } else {
+        @ranks = ($max_rank_exponent);
+    }
+}
 
 {
 	$format_op{$format}{start}->();
