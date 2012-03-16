@@ -6,6 +6,7 @@ WriteMakefile(
     NAME              => 'Benchmark::PriorityQueue',
     VERSION_FROM      => 'lib/Benchmark/PriorityQueue.pm', # finds $VERSION
     PREREQ_PM         => {
+    'Chart::Clicker' => 0,
 	'Moose' => 2.0401,
         'namespace::autoclean' => 0,
 	'Test::More' => 0.88,

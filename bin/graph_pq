@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use 5.010;
+
+use Chart::Clicker;
+use Text::CSV::Slurp;
+use Data::Dumper;
+
+die "Please specify one or more CSV files to read" unless @ARGV;
+my %series; # hash of data for Chart::Clickers
+
+for my $csv_file (@ARGV) {
+    my $data = Text::CSV::Slurp->load(file => $csv_file);
+    for my $row (@$data) {
+        my $task = $row->{Task};
+        my $time = $row->{Seconds} / $row->{Iterations};
+        $series{$row->{Task}}{$row->{Backend}}{$row->{Rank}} = $time;
+    }
+}
+
+for my $task (keys %series) {
+    my $cc = Chart::Clicker->new;
+    my $task_data = $series{$task};
+    for my $backend (keys %$task_data) {
+        $cc->add_data($backend, $task_data->{$backend});
+    }
+    eval {
+        $cc->write_output("$task.png");
+    }
+}
