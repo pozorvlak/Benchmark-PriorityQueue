@@ -7,9 +7,11 @@ use 5.010;
 use Chart::Clicker;
 use Text::CSV::Slurp;
 use Data::Dumper;
+use Benchmark::PriorityQueue qw/abbreviate_backends/;
 
 die "Please specify one or more CSV files to read" unless @ARGV;
 my %series; # hash of data for Chart::Clickers
+my %backends; # Which backends have we seen so far?
 
 for my $csv_file (@ARGV) {
     my $data = Text::CSV::Slurp->load(file => $csv_file);
@@ -17,14 +19,17 @@ for my $csv_file (@ARGV) {
         my $task = $row->{Task};
         my $time = $row->{Seconds} / $row->{Iterations};
         $series{$row->{Task}}{$row->{Backend}}{$row->{Rank}} = $time;
+        $backends{$row->{Backend}}++;
     }
 }
+
+my %abbrev = abbreviate_backends(keys %backends);
 
 for my $task (keys %series) {
     my $cc = Chart::Clicker->new;
     my $task_data = $series{$task};
     for my $backend (keys %$task_data) {
-        $cc->add_data($backend, $task_data->{$backend});
+        $cc->add_data($abbrev{$backend}, $task_data->{$backend});
     }
     eval {
         $cc->write_output("$task.png");

@@ -7,9 +7,10 @@ use Benchmark::PriorityQueue::Result;
 use List::MoreUtils qw(uniq);
 use Module::Load qw(load);
 use Sys::SigAction qw(timeout_call);
+use List::MoreUtils qw<uniq apply>;
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_workloads all_tasks all_backends);
+our @EXPORT_OK = qw(run_workloads all_tasks all_backends abbreviate_backends);
 
 our $VERSION = '0.01';
 
@@ -82,6 +83,26 @@ sub run_workloads {
 	}
 
 	return @ret;
+}
+
+sub abbreviate_backends {
+	my %seen;
+    my %backend_abbr;
+	for my $backend (@_ ? @_ : all_backends()) {
+		my $abbr = apply {
+			s/ (?<= [A-Z] ) [A-Z]* (?: (?=::) | [_a-z0-9]+ )//xmsg;
+			s/::/:/g;
+		} $backend;
+		my $disambiguated = $abbr;
+		for (my $n = 1; ; $disambiguated = sprintf '%s-%d', $abbr, ++$n) {
+			if (!$seen{$disambiguated}++) {
+				say "$disambiguated = $backend";
+				$backend_abbr{$backend} = $disambiguated;
+				last;
+			}
+		}
+	}
+    return %backend_abbr;
 }
 
 1;
